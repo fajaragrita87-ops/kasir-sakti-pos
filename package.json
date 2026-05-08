@@ -1,0 +1,17 @@
+{
+  "name": "kasir-sakti-pos",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=@kasir-sakti/api\" \"npm run dev --workspace=@kasir-sakti/web\"",
+    "build": "npm run build --workspaces",
+    "postinstall": "npm run generate --workspace=@kasir-sakti/api",
+    "generate": "prisma generate"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

@@ -1,0 +1,38 @@
+name: 🚀 Deploy Kasir Sakti POS
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy ke Vercel
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies (root)
+        run: npm install
+
+      - name: 🔧 Install dependencies (web app)
+        run: npm install
+        working-directory: apps/web
+
+      - name: 🏗️ Build web app
+        run: npm run build
+        working-directory: apps/web
+
+      - name: ✅ Build complete
+        run: echo "Build selesai! Vercel akan auto-deploy dari sini."

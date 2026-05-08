@@ -1,0 +1,487 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// === AUTH & USER MANAGEMENT ===
+
+model User {
+  id          String    @id @default(cuid())
+  name        String
+  email       String?   @unique
+  phone       String?   @unique           // login bisa via HP
+  password    String
+  pin         String?                     // PIN untuk login kasir
+  role        Role      @default(KASIR)
+  outletId    String?
+  outlet      Outlet?   @relation(fields: [outletId], references: [id])
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  auditLogs   AuditLog[]
+  transactions Transaction[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  KASIR
+}
+
+model Outlet {
+  id              String    @id @default(cuid())
+  ownerId         String
+  name            String
+  address         String?
+  phone           String?
+  logo            String?                 // URL ke S3/GCS
+  receiptFooter   String?                 // footer struk kustom
+  taxEnabled      Boolean   @default(false)
+  taxPercent      Float     @default(0)
+  serviceCharge   Float     @default(0)
+  operatingHours  Json?                   // jam operasional Anti Antri
+  maxCashiers     Int       @default(10)
+  maxProducts     Int       @default(5000)
+  users           User[]
+  products        Product[]
+  transactions    Transaction[]
+  coinBalance     CoinBalance?
+  employees       Employee[]
+  customers       Customer[]
+  tables          DiningTable[]           // untuk Anti Antri
+  createdAt       DateTime  @default(now())
+}
+
+// === PRODUCT & INVENTORY ===
+
+model Product {
+  id            String   @id @default(cuid())
+  outletId      String
+  outlet        Outlet   @relation(fields: [outletId], references: [id])
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  name          String
+  description   String?
+  sku           String?
+  barcode       String?
+  price         Int                       // harga jual (dalam Rupiah)
+  costPrice     Int?                      // harga beli/modal
+  stock         Int      @default(0)
+  minStock      Int      @default(5)
+  unit          String   @default("pcs")
+  imageUrl      String?                   // URL foto produk
+  isActive      Boolean  @default(true)
+  isComposite   Boolean  @default(false)  // produk komposit (resep)
+  components    ProductComponent[]        // untuk resep/BOM
+  transactionItems TransactionItem[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  outletId String
+  name     String
+  icon     String?
+  products Product[]
+}
+
+model ProductComponent {
+  id            String  @id @default(cuid())
+  parentId      String
+  parent        Product @relation(fields: [parentId], references: [id])
+  componentName String
+  quantity      Float
+  unit          String
+}
+
+// === TRANSACTION ===
+
+model Transaction {
+  id             String            @id @default(cuid())
+  outletId       String
+  outlet         Outlet            @relation(fields: [outletId], references: [id])
+  userId         String                                // kasir yang input
+  user           User              @relation(fields: [userId], references: [id])
+  customerId     String?
+  customer       Customer?         @relation(fields: [customerId], references: [id])
+  tableId        String?                               // untuk Anti Antri
+  orderType      OrderType         @default(DIRECT)    // DIRECT | QR_ORDER
+  subtotal       Int
+  discount       Int               @default(0)
+  discountType   DiscountType      @default(PERCENT)
+  taxAmount      Int               @default(0)
+  serviceAmount  Int               @default(0)
+  total          Int
+  paymentMethod  PaymentMethod
+  paymentAmount  Int
+  change         Int               @default(0)
+  status         TransactionStatus @default(COMPLETED)
+  notes          String?
+  receiptUrl     String?                               // URL PDF struk digital
+  items          TransactionItem[]
+  createdAt      DateTime          @default(now())
+}
+
+model TransactionItem {
+  id            String      @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id])
+  productName   String                                // snapshot nama saat transaksi
+  productPrice  Int                                   // snapshot harga saat transaksi
+  quantity      Int
+  discount      Int         @default(0)
+  subtotal      Int
+  notes         String?
+}
+
+enum OrderType {
+  DIRECT
+  QR_ORDER
+}
+
+enum DiscountType {
+  PERCENT
+  NOMINAL
+}
+
+enum PaymentMethod {
+  CASH
+  DEBIT
+  QRIS
+  EWALLET
+  TRANSFER
+  BON
+}
+
+enum TransactionStatus {
+  COMPLETED
+  VOIDED
+  HOLD
+}
+
+// === COIN SYSTEM ===
+
+model CoinBalance {
+  id          String      @id @default(cuid())
+  outletId    String      @unique
+  outlet      Outlet      @relation(fields: [outletId], references: [id])
+  balance     Int         @default(0)
+  totalTopup  Int         @default(0)   // total koin pernah dibeli
+  totalUsed   Int         @default(0)   // total koin pernah dipakai
+  logs        CoinLog[]
+  updatedAt   DateTime    @updatedAt
+}
+
+model CoinLog {
+  id            String      @id @default(cuid())
+  coinBalanceId String
+  coinBalance   CoinBalance @relation(fields: [coinBalanceId], references: [id])
+  type          CoinLogType               // TOPUP | USAGE | REFUND | BONUS
+  amount        Int                       // positif = masuk, negatif = keluar
+  feature       String?                   // fitur yang dipakai
+  description   String
+  balanceAfter  Int
+  xenditRefId   String?                   // referensi top-up dari Xendit
+  createdAt     DateTime    @default(now())
+}
+
+enum CoinLogType {
+  TOPUP
+  USAGE
+  REFUND
+  BONUS
+}
+
+// === ANTI ANTRI (QR ORDER) ===
+
+model DiningTable {
+  id         String   @id @default(cuid())
+  outletId   String
+  outlet     Outlet   @relation(fields: [outletId], references: [id])
+  tableNumber String
+  qrCode     String?                       // URL atau data QR
+  isActive   Boolean  @default(true)
+  orders     QrOrder[]
+}
+
+model QrOrder {
+  id          String      @id @default(cuid())
+  tableId     String
+  table       DiningTable @relation(fields: [tableId], references: [id])
+  outletId    String
+  items       Json                          // snapshot item pesanan
+  total       Int
+  serviceFee  Int         @default(1000)    // biaya layanan Rp 1.000
+  status      QrOrderStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(UNPAID)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum QrOrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  REJECTED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+// === HRD & PAYROLL ===
+
+model Employee {
+  id          String    @id @default(cuid())
+  outletId    String
+  outlet      Outlet    @relation(fields: [outletId], references: [id])
+  name        String
+  position    String
+  baseSalary  Int
+  bankAccount String?
+  bpjsNumber  String?
+  isActive    Boolean   @default(true)
+  attendances Attendance[]
+  payrolls    Payroll[]
+  createdAt   DateTime  @default(now())
+}
+
+model Attendance {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  date       DateTime @db.Date
+  checkIn    DateTime?
+  checkOut   DateTime?
+  status     AttendanceStatus  // HADIR | IZIN | SAKIT | CUTI | ALPHA
+  selfieUrl  String?
+  notes      String?
+}
+
+model Payroll {
+  id           String   @id @default(cuid())
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id])
+  outletId     String
+  period       String   // "2026-05"
+  baseSalary   Int
+  allowances   Int      @default(0)
+  overtime     Int      @default(0)
+  bpjsEmployee Int      @default(0)
+  bpjsCompany  Int      @default(0)
+  deductions   Int      @default(0)
+  netSalary    Int
+  status       PayrollStatus   // DRAFT | PROCESSED | PAID
+  processedAt  DateTime?
+  coinUsed     Int      @default(18)
+}
+
+enum AttendanceStatus {
+  HADIR
+  IZIN
+  SAKIT
+  CUTI
+  ALPHA
+}
+
+enum PayrollStatus {
+  DRAFT
+  PROCESSED
+  PAID
+}
+
+// === CRM (CUSTOMER) ===
+
+model Customer {
+  id           String        @id @default(cuid())
+  outletId     String
+  outlet       Outlet        @relation(fields: [outletId], references: [id])
+  name         String
+  phone        String?
+  totalSpent   Int           @default(0)
+  visitCount   Int           @default(0)
+  lastVisit    DateTime?
+  loyaltyPoints Int          @default(0)
+  segment      CustomerSegment @default(NEW)
+  transactions Transaction[]
+  debts        Debt[]
+  createdAt    DateTime      @default(now())
+}
+
+enum CustomerSegment {
+  NEW
+  ACTIVE
+  LOYAL
+  AT_RISK
+  CHURNED
+}
+
+// === PURCHASE ORDER ===
+
+model Supplier {
+  id        String          @id @default(cuid())
+  outletId  String
+  name      String
+  contact   String?
+  address   String?
+  email     String?
+  purchaseOrders PurchaseOrder[]
+  createdAt DateTime        @default(now())
+}
+
+model PurchaseOrder {
+  id          String     @id @default(cuid())
+  outletId    String
+  supplierId  String
+  supplier    Supplier   @relation(fields: [supplierId], references: [id])
+  poNumber    String
+  status      POStatus   @default(DRAFT)
+  items       POItem[]
+  totalAmount Int
+  notes       String?
+  sentAt      DateTime?
+  receivedAt  DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model POItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  productName     String
+  quantity        Int
+  unit            String
+  unitPrice       Int
+  subtotal        Int
+  receivedQty     Int           @default(0)
+}
+
+enum POStatus {
+  DRAFT
+  SENT
+  PARTIAL_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+// === PIUTANG (DEBT) ===
+
+model Debt {
+  id          String      @id @default(cuid())
+  outletId    String
+  customerId  String
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  transactionId String?
+  amount      Int                       // total piutang
+  paidAmount  Int         @default(0)
+  dueDate     DateTime?
+  status      DebtStatus  @default(OUTSTANDING)
+  notes       String?
+  payments    DebtPayment[]
+  createdAt   DateTime    @default(now())
+}
+
+model DebtPayment {
+  id        String   @id @default(cuid())
+  debtId    String
+  debt      Debt     @relation(fields: [debtId], references: [id])
+  amount    Int
+  paidAt    DateTime @default(now())
+  notes     String?
+}
+
+enum DebtStatus {
+  OUTSTANDING
+  PARTIAL
+  PAID
+}
+
+// === AUDIT LOG ===
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  outletId  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String                        // VOID_TRANSACTION | CHANGE_PRICE | dll
+  entity    String                        // Transaction | Product | dll
+  entityId  String
+  before    Json?
+  after     Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+// === OTP VERIFICATION ===
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  target    String                        // no HP atau email
+  code      String
+  type      OtpType  @default(REGISTER)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+enum OtpType {
+  REGISTER
+  LOGIN
+  RESET_PASSWORD
+}
+
+// === MENU GENERATOR (Patch 12) ===
+
+model MenuProject {
+  id          String      @id @default(cuid())
+  outletId    String
+  name        String                          // "Menu Ramadan 2026"
+  mode        MenuMode    @default(TEMPLATE)  // TEMPLATE | AI_GENERATED
+  templateId  String?
+  aiPrompt    Json?                           // input yang dikirim ke AI
+  generatedHtml String?  @db.Text            // hasil HTML dari AI
+  pdfUrl      String?                         // URL PDF final di S3
+  colorPalette String[]
+  fontPair    String[]
+  status      MenuStatus  @default(DRAFT)
+  coinUsed    Int         @default(0)
+  versions    MenuVersion[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model MenuVersion {
+  id          String      @id @default(cuid())
+  projectId   String
+  project     MenuProject @relation(fields: [projectId], references: [id])
+  versionNo   Int
+  html        String      @db.Text
+  pdfUrl      String?
+  note        String?
+  createdAt   DateTime    @default(now())
+}
+
+enum MenuMode {
+  TEMPLATE
+  AI_GENERATED
+}
+
+enum MenuStatus {
+  DRAFT
+  PREVIEW
+  DOWNLOADED
+}
