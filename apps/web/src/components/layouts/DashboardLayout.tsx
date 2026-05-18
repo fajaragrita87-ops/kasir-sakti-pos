@@ -16,12 +16,14 @@ interface SidebarItemProps {
   active: boolean;
   collapsed: boolean;
   isSAItem?: boolean;
+  onClick?: () => void;
 }
 
-function SidebarItem({ icon, label, to, active, collapsed, isSAItem }: SidebarItemProps) {
+function SidebarItem({ icon, label, to, active, collapsed, isSAItem, onClick }: SidebarItemProps) {
   return (
     <Link
       to={to}
+      onClick={onClick}
       title={collapsed ? label : ''}
       className={`flex items-center gap-3 px-3 py-2.5 mx-2 rounded-xl transition-all duration-150 group ${
         active
@@ -176,6 +178,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                             <Link
                               key={sub.to}
                               to={sub.to}
+                              onClick={() => setMobileOpen(false)}
                               className={`flex items-center px-3 py-1.5 rounded-lg text-[12px] transition-all ${
                                 location.pathname === sub.to
                                   ? 'bg-slate-100 text-slate-800 font-semibold'
@@ -199,6 +202,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     active={location.pathname === item.to}
                     collapsed={collapsed}
                     isSAItem={isSASection}
+                    onClick={() => setMobileOpen(false)}
                   />
                 );
               })}
@@ -253,7 +257,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <header className="h-14 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => { setCollapsed(p => !p); setMobileOpen(p => !p); }}
+              onClick={() => {
+                if (window.innerWidth < 1024) {
+                  setMobileOpen(p => !p);
+                  setCollapsed(false);
+                } else {
+                  setCollapsed(p => !p);
+                }
+              }}
               className="text-slate-400 hover:text-slate-700 transition-colors"
             >
               <Menu className="w-5 h-5" />
