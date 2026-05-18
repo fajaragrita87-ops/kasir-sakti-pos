@@ -10,20 +10,7 @@ interface AuditLog {
   status: LogStatus; amount: string; note?: string;
 }
 
-const LOGS: AuditLog[] = [
-  { id: '1', type: 'VOID', user: 'Budi (Kasir)', action: 'Pembatalan transaksi #TX-9021 — Pesanan salah', time: '14:20', date: '08 Mei 2026', status: 'CRITICAL', amount: 'Rp 45.000', note: 'Pelanggan minta ganti pesanan' },
-  { id: '2', type: 'DISCOUNT', user: 'Budi (Kasir)', action: 'Penerapan diskon manual 20% pada TX-9018', time: '13:15', date: '08 Mei 2026', status: 'WARNING', amount: '-Rp 12.000' },
-  { id: '3', type: 'REFUND', user: 'Siti (Admin)', action: 'Refund TX-9015 — Produk tidak tersedia', time: '12:30', date: '08 Mei 2026', status: 'CRITICAL', amount: '-Rp 28.000' },
-  { id: '4', type: 'PRICE_CHANGE', user: 'Siti (Admin)', action: 'Harga Nasi Goreng diubah Rp 20.000 → Rp 25.000', time: '11:00', date: '08 Mei 2026', status: 'WARNING', amount: '+Rp 5.000' },
-  { id: '5', type: 'SHIFT_CLOSE', user: 'Ahmad (Kasir)', action: 'Closing shift pagi — 38 transaksi, Rp 1.245.000', time: '14:05', date: '08 Mei 2026', status: 'SUCCESS', amount: 'Rp 1.245.000' },
-  { id: '6', type: 'LOGIN', user: 'Andi (Admin)', action: 'Login berhasil dari device baru — Chrome/Windows', time: '08:00', date: '08 Mei 2026', status: 'INFO', amount: '-' },
-  { id: '7', type: 'STOCK', user: 'Sistem', action: 'Alert stok: Kopi Susu Aren tersisa 3 unit', time: '07:30', date: '08 Mei 2026', status: 'WARNING', amount: '-' },
-  { id: '8', type: 'VOID', user: 'Doni (Kasir)', action: 'Pembatalan transaksi #TX-8990 — Input salah', time: '19:45', date: '07 Mei 2026', status: 'CRITICAL', amount: 'Rp 67.000' },
-  { id: '9', type: 'DISCOUNT', user: 'Doni (Kasir)', action: 'Diskon 10% pada TX-8985 — Pelanggan loyal', time: '18:20', date: '07 Mei 2026', status: 'WARNING', amount: '-Rp 8.500' },
-  { id: '10', type: 'LOGIN', user: 'Budi (Kasir)', action: 'Login berhasil — Shift malam dimulai', time: '18:00', date: '07 Mei 2026', status: 'SUCCESS', amount: '-' },
-  { id: '11', type: 'SHIFT_CLOSE', user: 'Siti (Admin)', action: 'Closing shift siang — 46 transaksi, Rp 2.180.000', time: '17:55', date: '07 Mei 2026', status: 'SUCCESS', amount: 'Rp 2.180.000' },
-  { id: '12', type: 'PRICE_CHANGE', user: 'Andi (Admin)', action: 'Harga Es Teh diubah Rp 4.000 → Rp 5.000', time: '09:00', date: '07 Mei 2026', status: 'WARNING', amount: '+Rp 1.000' },
-];
+const LOGS: AuditLog[] = [];
 
 const TYPE_STYLE: Record<LogType, { bg: string; text: string; label: string }> = {
   VOID:         { bg: 'bg-rose-100', text: 'text-rose-700', label: 'Void' },
@@ -47,7 +34,7 @@ export default function AuditLogPage() {
 
   const stats = {
     voids: LOGS.filter(l => l.type === 'VOID').length,
-    discountTotal: 20000 + 8500,
+    discountTotal: 0,
     refunds: LOGS.filter(l => l.type === 'REFUND').length,
     critical: LOGS.filter(l => l.status === 'CRITICAL').length,
   };
@@ -102,7 +89,7 @@ export default function AuditLogPage() {
           <div className="flex gap-2 flex-wrap">
             {(['SEMUA', 'VOID', 'DISCOUNT', 'REFUND', 'PRICE_CHANGE', 'LOGIN', 'SHIFT_CLOSE'] as const).map(t => (
               <button key={t} onClick={() => setTypeFilter(t)}
-                className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all flex-shrink-0 ${typeFilter === t ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all flex-shrink-0 ${typeFilter === t ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
                 {t === 'SEMUA' ? 'Semua' : TYPE_STYLE[t as LogType]?.label ?? t}
               </button>
             ))}

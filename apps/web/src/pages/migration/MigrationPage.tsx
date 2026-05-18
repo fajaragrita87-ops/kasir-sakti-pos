@@ -1,9 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Upload, CheckCircle, AlertCircle, ArrowRight, FileSpreadsheet,
   Package, Users, DollarSign, BookOpen, Zap, RefreshCw,
-  Download, ShieldCheck, ChevronDown, ChevronUp, Sparkles
+  Download, ShieldCheck, ChevronDown, ChevronUp, Sparkles, Coins
 } from 'lucide-react';
+import { useAuthStore } from '../../stores/auth.store';
+import { useProductStore } from '../../stores/product.store';
+import { getActivePricing } from '../../constants/pricing.constants';
+import { generateSecureToken } from '../../lib/security';
 
 type MigrateSource = 'MOKA' | 'ISELLER' | 'OLSERA' | 'EXCEL' | 'MANUAL';
 type StepId = 'SOURCE' | 'UPLOAD' | 'PREVIEW' | 'MIGRATE' | 'DONE';
@@ -47,10 +51,23 @@ const PREVIEW_DATA = {
 };
 
 export default function MigrationPage() {
+  const { user, setAuth } = useAuthStore();
+  const { addProduct } = useProductStore();
+  
+  const [migrationPrice, setMigrationPrice] = useState(0);
+  
+  useEffect(() => {
+    const p = getActivePricing().find(m => m.id === 'migration');
+    if (p && p.oneTimePrice) {
+      setMigrationPrice(p.oneTimePrice);
+    }
+  }, []);
+
   const [step, setStep] = useState<StepId>('SOURCE');
   const [source, setSource] = useState<MigrateSource | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadDone, setUploadDone] = useState(false);
+  const [parsedProducts, setParsedProducts] = useState<any[]>(PREVIEW_DATA.products);
   const [showPreview, setShowPreview] = useState<Record<string, boolean>>({});
   const [modules, setModules] = useState<DataModule[]>([
     { key: 'products',     label: 'Produk & Menu',       icon: <Package className="w-5 h-5" />,     count: 5,    status: 'PENDING', color: 'text-blue-600 bg-blue-100' },
@@ -61,28 +78,96 @@ export default function MigrationPage() {
   const [migrateProgress, setMigrateProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = () => {
-    setUploading(true);
-    setTimeout(() => { setUploading(false); setUploadDone(true); setStep('PREVIEW'); }, 2000);
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement> | React.MouseEvent) => {
+    if ('target' in e && (e.target as HTMLInputElement).files?.length) {
+      const file = (e.target as HTMLInputElement).files![0];
+      setUploading(true);
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target?.result as string;
+        if (text) {
+          const lines = text.split('\n').filter(l => l.trim().length > 0);
+          const newProducts = [];
+          // Skip header if typical CSV, but we'll try to parse data loosely
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+            if (cols.length >= 3) {
+              newProducts.push({
+                name: cols[0] || `Produk ${i}`,
+                price: parseInt(cols[1]) || 0,
+                category: cols[2] || 'Lain-lain',
+                stock: parseInt(cols[3]) || 0,
+                cost: 0,
+                sku: `MIG-${Date.now()}-${i}`,
+                isActive: true,
+                unit: 'pcs',
+                isComposite: false
+              });
+            }
+          }
+          if (newProducts.length > 0) {
+            setParsedProducts(newProducts);
+            setModules(prev => prev.map(m => m.key === 'products' ? { ...m, count: newProducts.length } : m));
+          }
+        }
+        setUploading(false);
+        setUploadDone(true);
+        setTimeout(() => setStep('PREVIEW'), 1000);
+      };
+      reader.readAsText(file);
+    } else {
+      // Demo upload
+      setUploading(true);
+      setTimeout(() => { 
+        setUploading(false); 
+        setUploadDone(true); 
+        setParsedProducts(PREVIEW_DATA.products);
+        setTimeout(() => setStep('PREVIEW'), 1000);
+      }, 2000);
+    }
   };
 
-  const handleMigrate = () => {
+  const [showPaymentConfirm, setShowPaymentConfirm] = useState(false);
+
+  const startMigration = () => {
+    if (!user) return;
+    if ((user.coins || 0) < migrationPrice) {
+      alert(`Koin tidak cukup! Sisa koin: ${user.coins || 0}`);
+      return;
+    }
+    
+    // Deduct coins
+    setAuth({ ...user, coins: (user.coins || 0) - migrationPrice }, generateSecureToken());
+    setShowPaymentConfirm(false);
+
     setStep('MIGRATE');
     setMigrateProgress(0);
     // Simulate each module importing one by one
     const delays = [800, 1800, 3200, 4500];
     delays.forEach((delay, i) => {
-      // Set IMPORTING
       setTimeout(() => {
         setModules(prev => prev.map((m, idx) => idx === i ? { ...m, status: 'IMPORTING' } : m));
       }, delay - 400);
-      // Set DONE
       setTimeout(() => {
         setModules(prev => prev.map((m, idx) => idx === i ? { ...m, status: 'DONE' } : m));
         setMigrateProgress(Math.round(((i + 1) / 4) * 100));
+        
+        // Actually save products when products module is done
+        if (i === 0) {
+          parsedProducts.forEach(p => addProduct(p));
+        }
+        
         if (i === 3) setTimeout(() => setStep('DONE'), 500);
       }, delay);
     });
+  };
+
+  const handleMigrateClick = () => {
+    if (migrationPrice > 0) {
+      setShowPaymentConfirm(true);
+    } else {
+      startMigration();
+    }
   };
 
   // ── STEP: SOURCE ──────────────────────────────────────────────
@@ -92,7 +177,7 @@ export default function MigrationPage() {
         <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
           <Sparkles className="w-4 h-4" /> Smart Migration Engine
         </div>
-        <h1 className="text-4xl font-black text-slate-900 tracking-tighter mb-3">Pindah ke Kasir Sakti<br /><span className="text-primary italic">dalam 1 Klik. Gratis.</span></h1>
+        <h1 className="text-4xl font-black text-slate-900 tracking-tighter mb-3">Pindah ke VISTRAL POS<br /><span className="text-primary italic">dalam 1 Klik. Gratis.</span></h1>
         <p className="text-lg text-slate-500 font-medium max-w-2xl">
           Data menu, pelanggan, transaksi, dan karyawan Anda dari aplikasi lama bisa dipindahkan secara otomatis — tanpa ketik ulang satu per satu.
         </p>
@@ -220,18 +305,18 @@ export default function MigrationPage() {
             <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><Package className="w-5 h-5" /></div>
             <div className="flex-1">
               <p className="font-black text-slate-900">Produk & Menu</p>
-              <p className="text-xs text-slate-400 font-bold">{PREVIEW_DATA.products.length} produk ditemukan</p>
+              <p className="text-xs text-slate-400 font-bold">{parsedProducts.length} produk ditemukan</p>
             </div>
             <span className="bg-emerald-100 text-emerald-700 text-xs font-black px-3 py-1 rounded-full">Siap Import</span>
             {showPreview.products ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
           </div>
           {showPreview.products && (
-            <div className="border-t border-slate-50 overflow-x-auto">
+            <div className="border-t border-slate-50 overflow-x-auto max-h-64 overflow-y-auto">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50"><tr>{['Nama Produk', 'Harga', 'Kategori', 'Stok'].map(h => <th key={h} className="px-5 py-3 text-left text-[10px] font-black text-slate-400 uppercase">{h}</th>)}</tr></thead>
+                <thead className="bg-slate-50 sticky top-0"><tr>{['Nama Produk', 'Harga', 'Kategori', 'Stok'].map(h => <th key={h} className="px-5 py-3 text-left text-[10px] font-black text-slate-400 uppercase">{h}</th>)}</tr></thead>
                 <tbody className="divide-y divide-slate-50">
-                  {PREVIEW_DATA.products.map(p => (
-                    <tr key={p.name}><td className="px-5 py-3 font-bold text-slate-700">{p.name}</td><td className="px-5 py-3">{fmtRp(p.price)}</td><td className="px-5 py-3 text-slate-500">{p.category}</td><td className="px-5 py-3">{p.stock}</td></tr>
+                  {parsedProducts.map((p, i) => (
+                    <tr key={i}><td className="px-5 py-3 font-bold text-slate-700">{p.name}</td><td className="px-5 py-3">{fmtRp(p.price)}</td><td className="px-5 py-3 text-slate-500">{p.category}</td><td className="px-5 py-3">{p.stock}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -275,12 +360,42 @@ export default function MigrationPage() {
 
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 mb-6">
         <p className="font-black text-primary mb-1">🎯 Ringkasan Migrasi</p>
-        <p className="text-sm text-slate-600 font-medium">5 produk · 3 pelanggan · 1.247 transaksi · 2 karyawan akan dipindahkan ke Kasir Sakti POS.</p>
+        <p className="text-sm text-slate-600 font-medium">{parsedProducts.length} produk · 3 pelanggan · 1.247 transaksi · 2 karyawan akan dipindahkan ke VISTRAL POS.</p>
       </div>
 
-      <button onClick={handleMigrate} className="w-full btn-premium py-5 text-lg flex items-center justify-center gap-3">
+      <button onClick={handleMigrateClick} className="w-full btn-premium py-5 text-lg flex items-center justify-center gap-3 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-white/20 group-hover:translate-x-full transition-transform duration-700 -translate-x-full skew-x-12" />
         <Zap className="w-6 h-6" /> Mulai Migrasi Sekarang — 1 Klik!
       </button>
+
+      {/* Payment Confirmation Modal */}
+      {showPaymentConfirm && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative overflow-hidden">
+            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-5">
+              <Coins className="w-8 h-8" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 text-center mb-2">Bayar per Pakai</h3>
+            <p className="text-slate-500 font-medium text-center mb-6">
+              Fitur Migrasi Data menggunakan sistem pembayaran per penggunaan. Anda akan dikenakan biaya <strong className="text-amber-500">{migrationPrice} Koin</strong> untuk melakukan migrasi ini.
+            </p>
+            
+            <div className="bg-slate-50 rounded-2xl p-4 mb-6 flex justify-between items-center">
+              <span className="font-bold text-slate-600">Saldo Koin Anda</span>
+              <span className="font-black text-amber-500 text-lg">{user?.coins || 0}</span>
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setShowPaymentConfirm(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200">
+                Batal
+              </button>
+              <button onClick={startMigration} className="flex-1 py-3 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/30">
+                Bayar & Migrasi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -325,8 +440,8 @@ export default function MigrationPage() {
       <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest mb-6">
         <Sparkles className="w-4 h-4" /> Migrasi Selesai!
       </div>
-      <h2 className="text-4xl font-black text-slate-900 mb-4">Selamat Datang di<br />Kasir Sakti POS! 🎉</h2>
-      <p className="text-slate-500 font-medium mb-8 max-w-md">Semua data Anda sudah berhasil dipindahkan. Mulai gunakan Kasir Sakti POS sekarang!</p>
+      <h2 className="text-4xl font-black text-slate-900 mb-4">Selamat Datang di<br />VISTRAL POS! 🎉</h2>
+      <p className="text-slate-500 font-medium mb-8 max-w-md">Semua data Anda sudah berhasil dipindahkan. Mulai gunakan VISTRAL POS sekarang!</p>
 
       <div className="grid grid-cols-2 gap-4 w-full mb-10">
         {[

@@ -1,114 +1,186 @@
-import React, { useState, useRef } from 'react';
-import { Wand2, Layout, FileDown, RefreshCw, ArrowLeft, Printer, Sparkles, Image as Img, Plus, X, ChevronRight, Check, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, ArrowLeft, Wand2, FileDown, Printer, Type, Image as Img, Palette } from 'lucide-react';
 import { useProductStore } from '../../stores/product.store';
 import { useAuthStore } from '../../stores/auth.store';
 
-type Step = 'HOME' | 'PICK_TEMPLATE' | 'CUSTOMIZE' | 'PREVIEW' | 'AI_FORM' | 'AI_RESULT';
+type Step = 'PROMPT' | 'GENERATING' | 'RESULT';
 
-const TEMPLATES = [
-  { id: 'rustic', name: 'Rustic Warung', tag: 'Paling Populer', bg: 'bg-[#2C1810]', accent: '#D4A853', textLight: '#F5E6D0', textDark: '#2C1810', pattern: 'radial-gradient(circle at 20% 80%, rgba(212,168,83,0.15) 0%, transparent 50%)', font: 'serif' },
-  { id: 'modern', name: 'Modern Minimal', tag: 'Trending', bg: 'bg-white', accent: '#1a1a2e', textLight: '#1a1a2e', textDark: '#1a1a2e', pattern: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)', font: 'sans-serif' },
-  { id: 'neon', name: 'Neon Street', tag: 'Gen Z Vibes', bg: 'bg-[#0a0a0a]', accent: '#39FF14', textLight: '#39FF14', textDark: '#0a0a0a', pattern: 'radial-gradient(ellipse at 50% 50%, rgba(57,255,20,0.05) 0%, transparent 70%)', font: 'monospace' },
-  { id: 'royal', name: 'Luxury Resto', tag: 'Premium', bg: 'bg-[#1a0533]', accent: '#FFD700', textLight: '#FFD700', textDark: '#1a0533', pattern: 'linear-gradient(180deg, rgba(255,215,0,0.05) 0%, transparent 100%)', font: 'serif' },
-  { id: 'tropical', name: 'Tropical Fresh', tag: 'F&B Hits', bg: 'bg-[#0D4F3C]', accent: '#F9C74F', textLight: '#FAFAFA', textDark: '#0D4F3C', pattern: 'radial-gradient(circle at 10% 90%, rgba(249,199,79,0.2) 0%, transparent 40%)', font: 'sans-serif' },
-  { id: 'sakura', name: 'Sakura Cafe', tag: 'Aesthetic', bg: 'bg-[#FDE8F0]', accent: '#C9184A', textLight: '#C9184A', textDark: '#3D0019', pattern: 'radial-gradient(circle at 80% 20%, rgba(201,24,74,0.08) 0%, transparent 50%)', font: 'serif' },
-  { id: 'nusantara', name: 'Warung Nusantara', tag: 'Tradisional', bg: 'bg-[#3D1C02]', accent: '#C68642', textLight: '#F5DEB3', textDark: '#3D1C02', pattern: 'repeating-linear-gradient(45deg, rgba(198,134,66,0.05) 0px, rgba(198,134,66,0.05) 2px, transparent 2px, transparent 12px)', font: 'serif' },
-  { id: 'kids', name: 'Kids & Family', tag: 'Playful', bg: 'bg-[#FFF9C4]', accent: '#FF6B6B', textLight: '#FF6B6B', textDark: '#2D2D2D', pattern: 'radial-gradient(circle at 15% 85%, rgba(255,107,107,0.1) 0%, transparent 40%), radial-gradient(circle at 85% 15%, rgba(78,205,196,0.1) 0%, transparent 40%)', font: 'sans-serif' },
-];
-
-interface MenuConfig {
-  outletName: string;
-  tagline: string;
-  logoUrl: string;
-  template: typeof TEMPLATES[0];
-  showPrices: boolean;
-  showImages: boolean;
+interface GenParams {
+  bg: string;
+  accent: string;
+  textLight: string;
+  textDark: string;
+  font: string;
   layout: 'single' | 'double';
 }
 
 export default function PrintMenuPage() {
   const { products } = useProductStore();
   const { user } = useAuthStore();
-  const [step, setStep] = useState<Step>('HOME');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [config, setConfig] = useState<MenuConfig>({
-    outletName: 'Warung Sakti',
-    tagline: 'Cita Rasa Terbaik Untuk Anda',
-    logoUrl: '',
-    template: TEMPLATES[0],
-    showPrices: true,
-    showImages: true,
-    layout: 'double',
+  
+  const [step, setStep] = useState<Step>('PROMPT');
+  const [outletName, setOutletName] = useState('Warung Sakti');
+  const [tagline, setTagline] = useState('Rasa Bintang Lima, Harga Kaki Lima');
+  const [prompt, setPrompt] = useState('');
+  
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState('');
+  
+  const [aiConfig, setAiConfig] = useState<GenParams>({
+    bg: '#ffffff', accent: '#000000', textLight: '#000000', textDark: '#000000', font: 'sans-serif', layout: 'double'
   });
-  const logoRef = useRef<HTMLInputElement>(null);
 
   const activeProducts = products.filter(p => p.isActive);
   const categories = Array.from(new Set(activeProducts.map(p => p.category)));
   const fmtRp = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setConfig(c => ({ ...c, logoUrl: reader.result as string }));
-    reader.readAsDataURL(file);
+  const extractThemeFromPrompt = (text: string): GenParams => {
+    const t = text.toLowerCase();
+    
+    // Default modern
+    let bg = '#FAFAFA';
+    let accent = '#2D3748';
+    let textLight = '#1A202C';
+    let textDark = '#1A202C';
+    let font = 'sans-serif';
+    let layout: 'single' | 'double' = 'double';
+
+    // Fonts
+    if (t.includes('klasik') || t.includes('elegan') || t.includes('mewah') || t.includes('kuno')) font = 'serif';
+    if (t.includes('retro') || t.includes('neon') || t.includes('komputer')) font = 'monospace';
+
+    // Colors
+    if (t.includes('gelap') || t.includes('dark') || t.includes('hitam')) { bg = '#111827'; textLight = '#F9FAFB'; textDark = '#F9FAFB'; accent = '#FCD34D'; }
+    if (t.includes('merah')) { accent = '#EF4444'; if (bg === '#FAFAFA') textLight = '#EF4444'; }
+    if (t.includes('biru')) { accent = '#3B82F6'; if (bg === '#FAFAFA') textLight = '#3B82F6'; }
+    if (t.includes('hijau')) { accent = '#10B981'; if (bg === '#FAFAFA') textLight = '#10B981'; }
+    if (t.includes('kuning') || t.includes('emas')) { accent = '#F59E0B'; }
+    if (t.includes('pink') || t.includes('merah muda')) { accent = '#EC4899'; }
+    if (t.includes('kopi') || t.includes('coklat') || t.includes('brown')) { bg = '#2D3748'; accent = '#D69E2E'; textLight = '#FDF6E3'; }
+    if (t.includes('neon')) { bg = '#000000'; accent = '#39FF14'; textLight = '#39FF14'; font = 'monospace'; }
+
+    // Layout
+    if (t.includes('satu kolom') || t.includes('single') || t.includes('besar')) layout = 'single';
+
+    return { bg, accent, textLight, textDark, font, layout };
   };
 
   const handleGenerate = () => {
-    setIsGenerating(true);
-    setTimeout(() => { setIsGenerating(false); setStep('PREVIEW'); }, 2000);
+    if (!prompt.trim()) {
+      alert('Tolong ketikkan prompt desain Anda terlebih dahulu.');
+      return;
+    }
+    
+    // In real app: deduct coins
+    
+    setStep('GENERATING');
+    setProgress(0);
+    
+    // Simulate AI Generation Process
+    const steps = [
+      { p: 10, msg: '🧠 Memahami konteks prompt...' },
+      { p: 30, msg: '🎨 Mengekstraksi preferensi warna & tipografi...' },
+      { p: 50, msg: '📐 Menghitung grid layout untuk ' + activeProducts.length + ' produk...' },
+      { p: 75, msg: '✨ Mengaplikasikan style visual...' },
+      { p: 90, msg: '🔥 Finalisasi rendering...' },
+      { p: 100, msg: 'Selesai!' }
+    ];
+
+    let currentStep = 0;
+    const interval = setInterval(() => {
+      if (currentStep < steps.length) {
+        setProgress(steps[currentStep].p);
+        setStatus(steps[currentStep].msg);
+        currentStep++;
+      } else {
+        clearInterval(interval);
+        setAiConfig(extractThemeFromPrompt(prompt));
+        setStep('RESULT');
+      }
+    }, 800);
   };
 
-  // ── PREVIEW ──────────────────────────────────────────────────
-  if (step === 'PREVIEW') {
-    const t = config.template;
+  // ── GENERATING ──────────────────────────────────────────────────
+  if (step === 'GENERATING') {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 animate-fade-in relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-slate-50 to-white -z-10" />
+        
+        <div className="w-32 h-32 relative mb-8">
+          <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+          <div className="absolute inset-2 bg-primary/40 rounded-full animate-pulse" />
+          <div className="absolute inset-4 bg-primary rounded-full flex items-center justify-center shadow-2xl shadow-primary/50">
+            <Wand2 className="w-10 h-10 text-white animate-spin-slow" />
+          </div>
+        </div>
+        
+        <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-4 italic">Sakti AI sedang bekerja...</h2>
+        
+        <div className="w-full max-w-md bg-white p-6 rounded-3xl shadow-2xl border border-slate-100">
+          <div className="flex justify-between text-xs font-black text-slate-400 mb-3 uppercase tracking-widest">
+            <span>Progress</span>
+            <span className="text-primary">{progress}%</span>
+          </div>
+          <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden mb-4">
+            <div className="h-full bg-gradient-to-r from-primary to-indigo-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+            <p className="text-sm font-bold text-slate-600 animate-pulse">{status}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── RESULT ──────────────────────────────────────────────────────
+  if (step === 'RESULT') {
     return (
       <div className="p-6 max-w-6xl mx-auto animate-fade-in">
-        <button onClick={() => setStep('CUSTOMIZE')} className="flex items-center gap-2 text-slate-400 font-bold text-sm mb-6 hover:text-primary">
-          <ArrowLeft className="w-4 h-4" /> Kembali Edit
-        </button>
+        <div className="flex items-center justify-between mb-8">
+          <button onClick={() => setStep('PROMPT')} className="flex items-center gap-2 text-slate-400 font-bold text-sm hover:text-primary transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Buat Desain Baru
+          </button>
+          <div className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl text-xs font-black uppercase flex items-center gap-2 border border-emerald-200">
+            <Sparkles className="w-4 h-4" /> AI Generation Berhasil
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Canvas */}
+          {/* Menu Canvas */}
           <div className="lg:col-span-2">
-            <div className="relative">
-              <div className="absolute -inset-3 rounded-[3rem] blur-2xl opacity-30" style={{ background: `linear-gradient(135deg, ${t.accent}, ${t.accent}50)` }} />
-              <div
-                className={`relative ${t.bg} rounded-[2rem] overflow-hidden shadow-3xl`}
-                style={{ background: t.pattern, aspectRatio: '210/297', minHeight: '500px' }}
-              >
+            <div className="relative p-8 rounded-[3rem] shadow-2xl" style={{ backgroundColor: aiConfig.bg }}>
+              <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, black 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+              <div className="relative z-10" style={{ minHeight: '600px' }}>
                 {/* Header */}
-                <div className="relative p-10 text-center border-b-2" style={{ borderColor: `${t.accent}30` }}>
-                  {config.logoUrl && <img src={config.logoUrl} alt="logo" className="w-16 h-16 object-contain mx-auto mb-4 rounded-full" />}
-                  <h1 className="text-4xl font-black uppercase tracking-tighter" style={{ color: t.textLight, fontFamily: t.font }}>
-                    {config.outletName}
+                <div className="text-center mb-10 pb-6 border-b-2" style={{ borderColor: `${aiConfig.accent}20` }}>
+                  <h1 className="text-5xl font-black uppercase tracking-tighter mb-2" style={{ color: aiConfig.textLight, fontFamily: aiConfig.font }}>
+                    {outletName}
                   </h1>
-                  <div className="flex items-center justify-center gap-3 mt-2">
-                    <div className="h-px flex-1" style={{ background: t.accent, opacity: 0.4 }} />
-                    <p className="text-sm font-bold" style={{ color: t.accent }}>{config.tagline}</p>
-                    <div className="h-px flex-1" style={{ background: t.accent, opacity: 0.4 }} />
-                  </div>
+                  <p className="text-lg font-bold italic tracking-wide" style={{ color: aiConfig.accent, fontFamily: aiConfig.font }}>
+                    {tagline}
+                  </p>
                 </div>
 
-                {/* Menu Items */}
-                <div className="p-8 space-y-8">
+                {/* Categories & Items */}
+                <div className="space-y-10">
                   {categories.map(cat => {
                     const items = activeProducts.filter(p => p.category === cat);
                     if (items.length === 0) return null;
                     return (
                       <div key={cat}>
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-2 h-6 rounded-full" style={{ background: t.accent }} />
-                          <h2 className="text-lg font-black uppercase tracking-wider" style={{ color: t.accent, fontFamily: t.font }}>{cat}</h2>
-                        </div>
-                        <div className={`grid gap-3 ${config.layout === 'double' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                        <h2 className="text-2xl font-black uppercase tracking-widest mb-6 flex items-center gap-4" style={{ color: aiConfig.accent, fontFamily: aiConfig.font }}>
+                          <span className="h-0.5 flex-1" style={{ backgroundColor: `${aiConfig.accent}40` }} />
+                          {cat}
+                          <span className="h-0.5 flex-1" style={{ backgroundColor: `${aiConfig.accent}40` }} />
+                        </h2>
+                        
+                        <div className={`grid gap-6 ${aiConfig.layout === 'double' ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
                           {items.map(p => (
-                            <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: `${t.accent}10`, border: `1px solid ${t.accent}20` }}>
-                              {config.showImages && p.imageUrl && (
-                                <img src={p.imageUrl} alt={p.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className="font-black text-sm truncate" style={{ color: t.textLight, fontFamily: t.font }}>{p.name}</p>
-                                {config.showPrices && <p className="text-xs font-bold mt-0.5" style={{ color: t.accent }}>{fmtRp(p.price)}</p>}
+                            <div key={p.id} className="group relative">
+                              <div className="flex justify-between items-baseline mb-1">
+                                <h3 className="text-lg font-bold" style={{ color: aiConfig.textLight, fontFamily: aiConfig.font }}>{p.name}</h3>
+                                <div className="flex-1 mx-4 border-b-2 border-dotted" style={{ borderColor: `${aiConfig.accent}30` }} />
+                                <span className="text-lg font-black" style={{ color: aiConfig.accent }}>{fmtRp(p.price)}</span>
                               </div>
                             </div>
                           ))}
@@ -117,454 +189,131 @@ export default function PrintMenuPage() {
                     );
                   })}
                 </div>
-
-                {/* Footer */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-center">
-                  <p className="text-[8px] font-black uppercase tracking-[0.3em]" style={{ color: `${t.textLight}40` }}>
-                    Dibuat dengan Kasir Sakti POS · zyntra.id
-                  </p>
-                </div>
               </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-6 shadow-xl">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-emerald-100 text-emerald-500 rounded-2xl flex items-center justify-center">
-                  <Check className="w-5 h-5" />
+          <div className="space-y-6">
+            <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100">
+              <h3 className="text-lg font-black text-slate-900 mb-4 uppercase">Hasil Ekstraksi AI</h3>
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 font-bold">Background</span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-4 h-4 rounded-full border border-slate-200" style={{ backgroundColor: aiConfig.bg }} />
+                    <span className="font-mono font-bold text-slate-700">{aiConfig.bg}</span>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-black text-slate-900">Desain Selesai!</p>
-                  <p className="text-xs text-slate-400">A4 · Print Ready · HD</p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 font-bold">Aksen Utama</span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-4 h-4 rounded-full border border-slate-200" style={{ backgroundColor: aiConfig.accent }} />
+                    <span className="font-mono font-bold text-slate-700">{aiConfig.accent}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 font-bold">Tipografi</span>
+                  <span className="font-bold text-slate-700 capitalize">{aiConfig.font}</span>
                 </div>
               </div>
+
               <div className="space-y-3">
-                <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-2 hover:bg-primary transition-colors">
-                  <FileDown className="w-5 h-5" /> Download PDF <span className="ml-auto bg-white/20 text-[10px] px-2 py-0.5 rounded-full">2 Koin</span>
+                <button className="w-full btn-premium py-4 text-sm flex items-center justify-center gap-2">
+                  <FileDown className="w-5 h-5" /> Download PDF (Siap Cetak)
                 </button>
-                <button className="w-full bg-slate-50 text-slate-600 py-4 rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-2">
-                  <Printer className="w-5 h-5" /> Cetak Langsung
-                </button>
-                <button onClick={() => setStep('CUSTOMIZE')} className="w-full border-2 border-slate-100 py-3 rounded-2xl font-black text-sm uppercase text-slate-400 hover:border-primary hover:text-primary transition-all">
-                  <RefreshCw className="w-4 h-4 inline mr-2" /> Revisi (1 Koin)
+                <button className="w-full bg-slate-100 text-slate-600 py-4 rounded-xl font-black text-sm uppercase flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors">
+                  <Printer className="w-5 h-5" /> Cetak Langsung via Browser
                 </button>
               </div>
             </div>
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
-              <Zap className="w-5 h-5 text-amber-500 fill-amber-500 flex-shrink-0" />
-              <div>
-                <p className="font-black text-amber-800 text-sm">Saldo Koin Anda</p>
-                <p className="text-xl font-black text-amber-600">{user?.coins?.toLocaleString()}</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-4 shadow-xl">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Ganti Template</p>
-              <div className="grid grid-cols-3 gap-2">
-                {TEMPLATES.map(t2 => (
-                  <button key={t2.id} onClick={() => { setConfig(c => ({ ...c, template: t2 })); }}
-                    className={`h-10 rounded-xl border-2 transition-all ${config.template.id === t2.id ? 'border-primary scale-110 shadow-lg' : 'border-transparent'} ${t2.bg}`}>
-                    {config.template.id === t2.id && <Check className="w-4 h-4 mx-auto" style={{ color: t2.accent }} />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  // ── CUSTOMIZE ─────────────────────────────────────────────────
-  if (step === 'CUSTOMIZE') {
-    const t = config.template;
-    return (
-      <div className="p-6 max-w-5xl mx-auto animate-fade-in">
-        <button onClick={() => setStep('PICK_TEMPLATE')} className="flex items-center gap-2 text-slate-400 font-bold text-sm mb-6 hover:text-primary">
-          <ArrowLeft className="w-4 h-4" /> Pilih Template Lain
-        </button>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Settings */}
-          <div className="space-y-5">
-            <div className={`${t.bg} rounded-2xl p-4 flex items-center gap-3`}>
-              <div className="w-6 h-6 rounded-full" style={{ background: t.accent }} />
-              <p className="font-black" style={{ color: t.textLight }}>{t.name}</p>
-              <span className="ml-auto text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: `${t.accent}20`, color: t.accent }}>{t.tag}</span>
-            </div>
-
-            {/* Logo Upload */}
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Logo Outlet</label>
-              <div onClick={() => logoRef.current?.click()}
-                className="border-2 border-dashed border-slate-200 rounded-2xl h-20 flex items-center justify-center cursor-pointer hover:border-primary transition-all overflow-hidden">
-                {config.logoUrl ? <img src={config.logoUrl} className="h-full object-contain" alt="logo" /> :
-                  <div className="text-center"><Img className="w-6 h-6 text-slate-300 mx-auto" /><p className="text-xs text-slate-400 mt-1">Upload Logo</p></div>}
-              </div>
-              <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nama Outlet</label>
-              <input value={config.outletName} onChange={e => setConfig(c => ({ ...c, outletName: e.target.value }))} className="input-field w-full" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tagline</label>
-              <input value={config.tagline} onChange={e => setConfig(c => ({ ...c, tagline: e.target.value }))} className="input-field w-full" />
-            </div>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={config.showPrices} onChange={e => setConfig(c => ({ ...c, showPrices: e.target.checked }))} className="w-4 h-4 accent-primary" />
-                <span className="text-sm font-bold text-slate-600">Tampilkan Harga</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={config.showImages} onChange={e => setConfig(c => ({ ...c, showImages: e.target.checked }))} className="w-4 h-4 accent-primary" />
-                <span className="text-sm font-bold text-slate-600">Tampilkan Foto</span>
-              </label>
-            </div>
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Layout</label>
-              <div className="grid grid-cols-2 gap-3">
-                {(['single', 'double'] as const).map(l => (
-                  <button key={l} onClick={() => setConfig(c => ({ ...c, layout: l }))}
-                    className={`py-3 rounded-2xl text-xs font-black uppercase border-2 transition-all ${config.layout === l ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 text-slate-400'}`}>
-                    {l === 'single' ? '1 Kolom' : '2 Kolom'}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Produk ({activeProducts.length} aktif dari Inventori)</p>
-              <div className="bg-slate-50 rounded-2xl p-3 max-h-40 overflow-y-auto space-y-1">
-                {activeProducts.length === 0 ? <p className="text-xs text-slate-400 text-center py-4">Belum ada produk. Tambah di menu Inventori.</p>
-                  : activeProducts.map(p => (
-                    <div key={p.id} className="flex items-center gap-2 text-xs">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span className="font-bold text-slate-600 flex-1 truncate">{p.name}</span>
-                      <span className="text-slate-400">{fmtRp(p.price)}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-            <button onClick={handleGenerate} disabled={isGenerating}
-              className="w-full btn-premium py-5 text-lg flex items-center justify-center gap-3">
-              {isGenerating ? <><RefreshCw className="w-6 h-6 animate-spin" /> Membuat Desain...</>
-                : <><Wand2 className="w-6 h-6" /> Generate Menu Premium — 5 Koin</>}
-            </button>
-          </div>
-
-          {/* Live mini preview */}
-          <div className="sticky top-6">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Preview Langsung</p>
-            <div className={`${t.bg} rounded-2xl p-6 shadow-2xl`} style={{ background: t.pattern }}>
-              {config.logoUrl && <img src={config.logoUrl} className="w-10 h-10 object-contain rounded-full mx-auto mb-3" alt="logo" />}
-              <h3 className="text-xl font-black text-center uppercase" style={{ color: t.textLight, fontFamily: t.font }}>{config.outletName}</h3>
-              <p className="text-center text-xs mt-1 mb-4" style={{ color: t.accent }}>{config.tagline}</p>
-              {activeProducts.slice(0, 4).map(p => (
-                <div key={p.id} className="flex justify-between py-1.5 border-b" style={{ borderColor: `${t.accent}20` }}>
-                  <span className="text-xs font-bold" style={{ color: t.textLight }}>{p.name}</span>
-                  {config.showPrices && <span className="text-xs font-black" style={{ color: t.accent }}>{fmtRp(p.price)}</span>}
-                </div>
-              ))}
-              {activeProducts.length > 4 && <p className="text-center text-[10px] mt-2" style={{ color: `${t.textLight}40` }}>+{activeProducts.length - 4} item lainnya...</p>}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── PICK TEMPLATE ─────────────────────────────────────────────
-  if (step === 'PICK_TEMPLATE') {
-    return (
-      <div className="p-6 max-w-5xl mx-auto animate-fade-in">
-        <button onClick={() => setStep('HOME')} className="flex items-center gap-2 text-slate-400 font-bold text-sm mb-8 hover:text-primary">
-          <ArrowLeft className="w-4 h-4" /> Kembali
-        </button>
-        <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter italic mb-2">Pilih Template</h2>
-        <p className="text-slate-500 font-medium mb-8">6 template premium hand-crafted. Semua siap cetak. <span className="font-black text-primary">5 Koin</span></p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-          {TEMPLATES.map(t => (
-            <div key={t.id} onClick={() => { setConfig(c => ({ ...c, template: t })); setStep('CUSTOMIZE'); }}
-              className={`cursor-pointer rounded-2xl overflow-hidden border-4 transition-all hover:scale-[1.02] hover:shadow-2xl ${config.template.id === t.id ? 'border-primary' : 'border-transparent'}`}>
-              {/* Template visual preview */}
-              <div className={`${t.bg} p-6`} style={{ background: t.pattern }}>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 rounded-full" style={{ background: t.accent }} />
-                  <div className="h-2 rounded-full flex-1" style={{ background: `${t.accent}30` }} />
-                </div>
-                <div className="space-y-2">
-                  <div className="h-4 rounded" style={{ background: `${t.accent}40`, width: '70%' }} />
-                  <div className="h-2 rounded" style={{ background: `${t.textLight}20`, width: '90%' }} />
-                  <div className="h-2 rounded" style={{ background: `${t.textLight}20`, width: '80%' }} />
-                  <div className="h-2 rounded" style={{ background: `${t.textLight}20`, width: '85%' }} />
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <div className="h-8 rounded-lg flex-1" style={{ background: `${t.accent}20` }} />
-                  <div className="h-8 rounded-lg flex-1" style={{ background: `${t.accent}20` }} />
-                </div>
-              </div>
-              <div className="bg-white p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-black text-slate-800 text-sm">{t.name}</p>
-                    <span className="text-[9px] font-black uppercase" style={{ color: t.accent }}>{t.tag}</span>
-                  </div>
-                  {config.template.id === t.id && <Check className="w-5 h-5 text-primary" />}
-                  <ChevronRight className={`w-4 h-4 text-slate-300 ${config.template.id === t.id ? 'hidden' : ''}`} />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // ── AI FORM ────────────────────────────────────────────────────
-  const [aiForm, setAiForm] = useState({ businessType: 'warung_makan', tone: 'Modern & Minimalis', size: 'A4', notes: '' });
-  const [aiProgress, setAiProgress] = useState(0);
-
-  const handleAIGenerate = () => {
-    setIsGenerating(true);
-    setAiProgress(0);
-    const steps = [20, 45, 70, 90, 100];
-    steps.forEach((p, i) => setTimeout(() => {
-      setAiProgress(p);
-      if (p === 100) { setIsGenerating(false); setStep('AI_RESULT'); }
-    }, (i + 1) * 700));
-  };
-
-  if (step === 'AI_FORM') {
-    return (
-      <div className="p-6 max-w-3xl mx-auto animate-fade-in">
-        <button onClick={() => setStep('HOME')} className="flex items-center gap-2 text-slate-400 font-bold text-sm mb-8 hover:text-primary">
-          <ArrowLeft className="w-4 h-4" /> Kembali
-        </button>
-        <div className="mb-8">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
-            <Sparkles className="w-4 h-4" /> AI Visual Magic Generator
-          </div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-2">Ceritakan Brand Anda</h2>
-          <p className="text-slate-500 font-medium">AI kami akan membuat desain menu 100% unik dalam 30 detik. <span className="font-black text-primary">20 Koin</span></p>
-        </div>
-
-        <div className="bg-white rounded-[2rem] p-8 shadow-xl space-y-6">
-          <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Jenis Usaha</label>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { key: 'warung_makan', label: '🍜 Warung Makan' },
-                { key: 'cafe', label: '☕ Cafe / Kopi' },
-                { key: 'toko', label: '🛒 Toko / Minimart' },
-                { key: 'salon', label: '💇 Salon / Beauty' },
-                { key: 'bakery', label: '🎂 Bakery / Kue' },
-                { key: 'catering', label: '🍱 Catering' },
-              ].map(b => (
-                <button key={b.key} onClick={() => setAiForm(f => ({ ...f, businessType: b.key }))}
-                  className={`p-3 rounded-2xl border-2 text-sm font-bold transition-all ${aiForm.businessType === b.key ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 text-slate-500 hover:border-slate-200'}`}>
-                  {b.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Tone / Suasana</label>
-            <div className="grid grid-cols-2 gap-3">
-              {['Modern & Minimalis', 'Tradisional & Hangat', 'Colorful & Playful', 'Luxury & Elegant'].map(t => (
-                <button key={t} onClick={() => setAiForm(f => ({ ...f, tone: t }))}
-                  className={`p-3 rounded-2xl border-2 text-sm font-bold transition-all ${aiForm.tone === t ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 text-slate-500 hover:border-slate-200'}`}>
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Ukuran</label>
-            <div className="flex gap-3">
-              {['A4', 'A3', 'F4', 'Brosur'].map(s => (
-                <button key={s} onClick={() => setAiForm(f => ({ ...f, size: s }))}
-                  className={`px-5 py-3 rounded-2xl border-2 text-sm font-bold transition-all flex-1 ${aiForm.size === s ? 'border-primary bg-primary/5 text-primary' : 'border-slate-100 text-slate-500'}`}>
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-primary/5 rounded-2xl p-4">
-            <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">
-              {activeProducts.length} Produk Auto-Sync dari Inventori
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {activeProducts.slice(0, 6).map(p => (
-                <span key={p.id} className="text-xs font-bold text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-100">{p.name}</span>
-              ))}
-              {activeProducts.length > 6 && <span className="text-xs font-bold text-primary">+{activeProducts.length - 6} lainnya</span>}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Info Tambahan (opsional)</label>
-            <textarea value={aiForm.notes} onChange={e => setAiForm(f => ({ ...f, notes: e.target.value }))}
-              placeholder="Contoh: Warna brand kami hijau tua, nama kasir adalah Pak Budi, kami spesialis nasi goreng..."
-              className="input-field w-full h-24 resize-none" />
-          </div>
-
-          {isGenerating ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-sm font-bold text-slate-600">
-                <span>AI sedang membuat desain...</span>
-                <span className="text-primary font-black">{aiProgress}%</span>
-              </div>
-              <div className="w-full bg-slate-100 rounded-full h-3">
-                <div className="bg-primary h-3 rounded-full transition-all duration-500" style={{ width: `${aiProgress}%` }} />
-              </div>
-              {[
-                [20, '🔍 Menganalisis jenis usaha & tone...'],
-                [45, '🎨 Memilih palet warna & tipografi...'],
-                [70, '📝 Menulis copywriting produk...'],
-                [90, '🖼️ Menyusun layout menu...'],
-                [100, '✅ Desain selesai!'],
-              ].filter(([p]) => (p as number) <= aiProgress).map(([, label]) => (
-                <p key={String(label)} className="text-xs font-bold text-slate-500 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-primary rounded-full" />{label}
-                </p>
-              ))}
-            </div>
-          ) : (
-            <button onClick={handleAIGenerate}
-              className="w-full btn-premium py-5 text-lg flex items-center justify-center gap-3">
-              <Sparkles className="w-6 h-6" /> Generate dengan AI — 20 Koin
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // ── AI RESULT ──────────────────────────────────────────────────
-  if (step === 'AI_RESULT') {
-    const aiTemplate = TEMPLATES[1]; // Modern Minimal sebagai hasil AI
-    return (
-      <div className="p-6 max-w-5xl mx-auto animate-fade-in">
-        <button onClick={() => setStep('AI_FORM')} className="flex items-center gap-2 text-slate-400 font-bold text-sm mb-6 hover:text-primary">
-          <ArrowLeft className="w-4 h-4" /> Revisi (5 Koin)
-        </button>
-        <div className="flex items-center gap-3 mb-6 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-4">
-          <Sparkles className="w-5 h-5 text-emerald-500" />
-          <div>
-            <p className="font-black text-emerald-800">Desain AI Selesai Dibuat!</p>
-            <p className="text-xs text-emerald-600 font-medium">Tone: {aiForm.tone} · {aiForm.size} · 20 Koin terpakai</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <div className={`${aiTemplate.bg} rounded-[2rem] overflow-hidden shadow-2xl`} style={{ background: aiTemplate.pattern, aspectRatio: '210/297', minHeight: '500px' }}>
-              <div className="p-10 text-center border-b-2" style={{ borderColor: `${aiTemplate.accent}30` }}>
-                <div className="text-4xl mb-2">🤖</div>
-                <h1 className="text-4xl font-black uppercase tracking-tighter" style={{ color: aiTemplate.textLight }}>{config.outletName}</h1>
-                <p className="text-sm font-bold mt-2" style={{ color: aiTemplate.accent }}>AI-Generated · {aiForm.tone}</p>
-              </div>
-              <div className="p-8 space-y-4">
-                {activeProducts.slice(0, 6).map(p => (
-                  <div key={p.id} className="flex justify-between py-2 border-b" style={{ borderColor: `${aiTemplate.accent}20` }}>
-                    <span className="font-bold text-sm" style={{ color: aiTemplate.textLight }}>{p.name}</span>
-                    <span className="font-black text-sm" style={{ color: aiTemplate.accent }}>Rp {p.price.toLocaleString('id-ID')}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="absolute bottom-4 left-0 right-0 text-center">
-                <p className="text-[8px] font-black uppercase tracking-widest opacity-30" style={{ color: aiTemplate.textLight }}>Dibuat dengan AI · Kasir Sakti POS · zyntra.id</p>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-6 shadow-xl space-y-3">
-              <p className="font-black text-slate-800 text-sm uppercase tracking-tight">Download & Cetak</p>
-              <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-2">
-                <FileDown className="w-4 h-4" /> Download PDF · 2 Koin
-              </button>
-              <button className="w-full bg-slate-50 text-slate-600 py-4 rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-2">
-                <Printer className="w-4 h-4" /> Cetak Langsung
+            <div className="bg-primary/5 rounded-3xl p-6 border border-primary/20">
+              <p className="text-xs font-black text-primary uppercase tracking-widest mb-2">Kurang Cocok?</p>
+              <p className="text-sm text-slate-600 font-medium mb-4">Coba ubah prompt Anda dengan kata kunci warna (merah, biru, gelap) atau gaya (klasik, neon).</p>
+              <button onClick={() => setStep('PROMPT')} className="w-full py-3 bg-white text-primary border-2 border-primary/20 rounded-xl font-bold hover:bg-primary hover:text-white transition-all text-sm">
+                Coba Prompt Lain
               </button>
             </div>
-            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 text-xs font-medium text-slate-600 space-y-1">
-              <p className="font-black text-primary mb-2">🎨 Pilihan Desain AI:</p>
-              <p>• Palet: Slate + White (Modern)</p>
-              <p>• Font: Inter (Clean & Professional)</p>
-              <p>• Layout: 2 Kolom</p>
-              <p>• Tone: {aiForm.tone}</p>
-            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // ── HOME ──────────────────────────────────────────────────────
+  // ── PROMPT ──────────────────────────────────────────────────────
   return (
-    <div className="p-6 max-w-5xl mx-auto animate-fade-in">
-      <div className="mb-12">
-        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">
-          <Sparkles className="w-4 h-4" /> Studio Desain Menu
+    <div className="p-6 max-w-4xl mx-auto animate-fade-in">
+      <div className="mb-10 text-center">
+        <div className="inline-flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 shadow-xl shadow-slate-900/20">
+          <Wand2 className="w-4 h-4 text-amber-400" /> Sakti AI Menu Generator
         </div>
-        <h1 className="text-6xl font-black text-slate-900 tracking-tighter mb-3 uppercase italic leading-none">
-          Cetak Menu <span className="text-primary">Premium</span>
+        <h1 className="text-5xl font-black text-slate-900 tracking-tighter mb-4 italic leading-tight">
+          Cukup Ketik, <br/><span className="text-primary not-italic">Biar AI Yang Desain.</span>
         </h1>
-        <p className="text-xl text-slate-500 font-medium max-w-2xl">
-          Desain menu restoran profesional dari produk Inventori Anda — langsung, tanpa perlu desainer.
+        <p className="text-lg text-slate-500 font-medium max-w-xl mx-auto">
+          Tinggalkan template kaku. Ceritakan gaya menu yang Anda inginkan, dan AI kami akan merancangnya khusus untuk Anda secara real-time.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        <div onClick={() => setStep('PICK_TEMPLATE')}
-          className="group bg-white rounded-[2.5rem] p-10 border-4 border-white hover:border-primary/30 shadow-xl cursor-pointer transition-all duration-300 hover:-translate-y-1">
-          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-blue-500 transition-all">
-            <Layout className="w-8 h-8 text-blue-400 group-hover:text-white transition-colors" />
-          </div>
-          <span className="text-xs font-black text-blue-500 uppercase tracking-widest">Cepat & Pasti Keren</span>
-          <h3 className="text-3xl font-black text-slate-900 mt-2 mb-3 tracking-tighter">Template Premium</h3>
-          <p className="text-slate-500 font-medium leading-relaxed mb-8">6 template artisan premium. Produk dari Inventori otomatis masuk. Siap cetak dalam 30 detik.</p>
-          <div className="flex justify-between items-center pt-6 border-t border-slate-50">
-            <span className="text-2xl font-black text-slate-900">5 Koin</span>
-            <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center group-hover:bg-primary transition-all">
-              <ChevronRight className="w-6 h-6 text-white" />
+      <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
+        <div className="p-8 md:p-10 space-y-8">
+          
+          {/* Identitas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><Type className="w-3 h-3" /> Nama Outlet</label>
+              <input 
+                value={outletName} 
+                onChange={e => setOutletName(e.target.value)} 
+                className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl font-bold text-slate-800 focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all" 
+              />
             </div>
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><Type className="w-3 h-3" /> Tagline / Slogan</label>
+              <input 
+                value={tagline} 
+                onChange={e => setTagline(e.target.value)} 
+                className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl font-bold text-slate-800 focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all" 
+              />
+            </div>
+          </div>
+
+          {/* Prompt Utama */}
+          <div className="relative">
+            <label className="block text-sm font-black text-slate-900 uppercase tracking-tight mb-3 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" /> Prompt Desain (Beritahu AI Apa Yang Anda Inginkan)
+            </label>
+            <div className="absolute top-12 right-4 flex gap-2">
+              <button onClick={() => setPrompt('Buatkan saya menu dengan gaya elegan, warna latar hitam gelap dan aksen emas')} className="text-[10px] bg-slate-100 text-slate-500 font-bold px-3 py-1.5 rounded-lg hover:bg-slate-200">✨ Elegan & Mewah</button>
+              <button onClick={() => setPrompt('Saya mau desain yang colorful, ceria dengan warna dominan merah muda dan layout 1 kolom besar')} className="text-[10px] bg-slate-100 text-slate-500 font-bold px-3 py-1.5 rounded-lg hover:bg-slate-200">🎨 Ceria</button>
+            </div>
+            <textarea 
+              value={prompt} 
+              onChange={e => setPrompt(e.target.value)} 
+              placeholder="Contoh: Buatkan saya desain bertema warung kopi senja dengan warna latar gelap dan font klasik..."
+              className="w-full bg-slate-50 border-2 border-slate-200 p-6 pt-14 rounded-3xl font-bold text-slate-800 text-lg focus:ring-8 focus:ring-primary/10 focus:border-primary outline-none transition-all h-48 resize-none placeholder:font-normal placeholder:text-slate-400" 
+            />
+          </div>
+
+          {/* Info Sync */}
+          <div className="flex items-center gap-3 bg-blue-50 text-blue-700 px-5 py-4 rounded-2xl border border-blue-100 text-sm font-medium">
+            <Img className="w-5 h-5" />
+            <p>
+              <span className="font-black">{activeProducts.length} produk</span> dari inventori Anda akan otomatis disusun oleh AI ke dalam desain ini.
+            </p>
           </div>
         </div>
 
-        <div onClick={() => setStep('AI_FORM' as Step)}
-          className="group bg-slate-900 rounded-[2.5rem] p-10 border-4 border-slate-900 hover:border-primary shadow-2xl cursor-pointer transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
-          <div className="absolute top-4 right-6 bg-primary text-white text-[8px] font-black px-3 py-1 rounded-full uppercase animate-pulse">✨ Aktif</div>
-          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
-          <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-primary/40 transition-all">
-            <Wand2 className="w-8 h-8 text-primary" />
+        {/* Action Bar */}
+        <div className="bg-slate-50 p-6 md:p-8 flex items-center justify-between border-t border-slate-100">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Biaya Generation</p>
+            <p className="text-2xl font-black text-amber-500 flex items-center gap-2">1 <span className="text-sm font-bold text-slate-500">Koin</span></p>
           </div>
-          <span className="text-xs font-black text-primary uppercase tracking-widest">AI Eksklusif</span>
-          <h3 className="text-3xl font-black text-white mt-2 mb-3 tracking-tighter">AI Visual Magic</h3>
-          <p className="text-slate-400 font-medium leading-relaxed mb-8">Deskripsikan brand Anda, AI kami buat desain 100% unik. Seperti punya desainer pribadi 24/7.</p>
-          <div className="flex justify-between items-center pt-6 border-t border-white/10">
-            <span className="text-2xl font-black text-white">20 Koin</span>
-            <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-              <ChevronRight className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Product sync notice */}
-      <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 flex items-start gap-4">
-        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
-          <Sparkles className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <p className="font-black text-slate-800">Sinkronisasi Otomatis dengan Inventori</p>
-          <p className="text-sm text-slate-500 font-medium mt-0.5">
-            {activeProducts.length} produk aktif dari Inventori akan otomatis masuk ke desain menu Anda.
-            {activeProducts.length === 0 && <span className="text-amber-600 font-black"> Tambah produk di Inventori terlebih dahulu.</span>}
-          </p>
+          <button onClick={handleGenerate} className="btn-premium px-8 py-4 text-lg flex items-center gap-3 shadow-2xl shadow-primary/30">
+            <Wand2 className="w-5 h-5" /> Generate Sekarang
+          </button>
         </div>
       </div>
     </div>

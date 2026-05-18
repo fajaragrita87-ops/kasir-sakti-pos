@@ -8,15 +8,14 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#8B5CF6",
-          dark: "#7C3AED",
-          light: "#A78BFA",
-          cyan: "#06B6D4",
+          DEFAULT: "#4F46E5",
+          dark: "#4338CA",
+          light: "#818CF8",
         },
-        success: "#10B981",
-        warning: "#F59E0B",
-        danger: "#EF4444",
-        neutral: "#64748B",
+        success: "#059669",
+        warning: "#D97706",
+        danger: "#DC2626",
+        neutral: "#475569",
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
@@ -32,6 +31,13 @@ export default {
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'spin-slow': 'spin 3s linear infinite',
+        'marquee': 'marquee 20s linear infinite',
+      },
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        }
       }
     },
   },

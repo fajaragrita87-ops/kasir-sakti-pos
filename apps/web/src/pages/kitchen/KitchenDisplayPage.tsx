@@ -10,18 +10,12 @@ interface KDSOrder {
   source: 'POS' | 'ANTI_ANTRI'; priority: 'NORMAL' | 'HIGH';
 }
 
-const MOCK_ORDERS: KDSOrder[] = [
-  { id: 'TX-001', tableNo: '3', items: [{ name: 'Nasi Goreng Spesial', qty: 2 }, { name: 'Es Teh Manis', qty: 2 }], status: 'PENDING', time: '08:14', elapsed: 45, source: 'ANTI_ANTRI', priority: 'HIGH' },
-  { id: 'TX-002', tableNo: '7', items: [{ name: 'Mie Ayam', qty: 1, note: 'Tanpa bakso' }, { name: 'Kopi Susu', qty: 1 }], status: 'COOKING', time: '08:10', elapsed: 280, source: 'POS', priority: 'NORMAL' },
-  { id: 'TX-003', tableNo: '1', items: [{ name: 'Soto Ayam', qty: 3 }, { name: 'Es Jeruk', qty: 3, note: 'Gula sedikit' }], status: 'COOKING', time: '08:08', elapsed: 380, source: 'ANTI_ANTRI', priority: 'HIGH' },
-  { id: 'TX-004', tableNo: '5', items: [{ name: 'Ayam Bakar', qty: 1 }, { name: 'Nasi Putih', qty: 1 }], status: 'READY', time: '08:05', elapsed: 540, source: 'POS', priority: 'NORMAL' },
-  { id: 'TX-005', tableNo: '2', items: [{ name: 'Bakso Malang', qty: 2 }], status: 'PENDING', time: '08:15', elapsed: 12, source: 'POS', priority: 'NORMAL' },
-];
+const MOCK_ORDERS: KDSOrder[] = [];
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string; border: string; next: OrderStatus | null }> = {
-  PENDING:  { label: '⏳ Antri',    color: 'text-amber-700',  bg: 'bg-amber-50',   border: 'border-amber-300', next: 'COOKING' },
-  COOKING:  { label: '🔥 Masak',   color: 'text-orange-700', bg: 'bg-orange-50',  border: 'border-orange-300', next: 'READY' },
-  READY:    { label: '✅ Siap',     color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-300', next: 'SERVED' },
+  PENDING:  { label: '⏳ Antri',    color: 'text-amber-700',  bg: 'bg-amber-50',   border: 'border-amber-200', next: 'COOKING' },
+  COOKING:  { label: '🔥 Masak',   color: 'text-orange-700', bg: 'bg-orange-50',  border: 'border-orange-200', next: 'READY' },
+  READY:    { label: '✅ Siap',     color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', next: 'SERVED' },
   SERVED:   { label: '🍽️ Tersaji',  color: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200', next: null },
 };
 
@@ -43,21 +37,9 @@ export default function KitchenDisplayPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Simulate new order arrival every 30s
+  // Remove simulate new order arrival every 30s
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const newOrder: KDSOrder = {
-        id: `TX-${String(Date.now()).slice(-3)}`,
-        tableNo: String(Math.floor(Math.random() * 10) + 1),
-        items: [{ name: 'Pesanan Baru', qty: 1 }],
-        status: 'PENDING', time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-        elapsed: 0, source: 'ANTI_ANTRI', priority: 'NORMAL',
-      };
-      setOrders(prev => [newOrder, ...prev]);
-      setNewOrderAlert(true);
-      setTimeout(() => setNewOrderAlert(false), 3000);
-    }, 30000);
-    return () => clearTimeout(timer);
+    // Demo mode: No random new orders
   }, []);
 
   const advanceStatus = (id: string) => {
@@ -77,35 +59,35 @@ export default function KitchenDisplayPage() {
     const cfg = STATUS_CONFIG[order.status];
     const isOverdue = order.elapsed > 600; // >10min = overdue
     return (
-      <div className={`rounded-2xl border-2 p-5 transition-all ${cfg.border} ${cfg.bg} ${isOverdue ? 'ring-2 ring-rose-400 ring-offset-2' : ''}`}>
+      <div className={`bg-white rounded-2xl border p-5 shadow-sm transition-all ${cfg.border} ${isOverdue ? 'ring-2 ring-rose-400 ring-offset-2' : ''}`}>
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-2xl font-black text-slate-900">Meja {order.tableNo}</span>
+              <span className="text-2xl font-black text-slate-800 tracking-tight">Meja {order.tableNo}</span>
               {order.source === 'ANTI_ANTRI' && (
-                <span className="bg-primary text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase">QR Order</span>
+                <span className="bg-slate-100 text-slate-600 border border-slate-200 text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">QR Order</span>
               )}
               {order.priority === 'HIGH' && (
-                <span className="bg-rose-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase">Prioritas</span>
+                <span className="bg-rose-50 text-rose-600 border border-rose-200 text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">Prioritas</span>
               )}
             </div>
-            <p className="text-xs font-bold text-slate-400">{order.id} · {order.time}</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{order.id} · {order.time}</p>
           </div>
-          <div className={`text-right ${isOverdue ? 'text-rose-500' : 'text-slate-500'}`}>
-            <Clock className="w-4 h-4 ml-auto mb-0.5" />
-            <p className={`text-sm font-black ${isOverdue ? 'text-rose-500' : 'text-slate-700'}`}>{fmtElapsed(order.elapsed)}</p>
+          <div className={`text-right ${isOverdue ? 'text-rose-500' : 'text-slate-400'}`}>
+            <Clock className="w-4 h-4 ml-auto mb-1" />
+            <p className={`text-sm font-black ${isOverdue ? 'text-rose-600' : 'text-slate-500'}`}>{fmtElapsed(order.elapsed)}</p>
           </div>
         </div>
 
         {/* Items */}
-        <div className="space-y-2 mb-5">
+        <div className="space-y-3 mb-5 p-3 bg-slate-50/50 rounded-xl border border-slate-100">
           {order.items.map((item, i) => (
-            <div key={i} className="flex items-start gap-2">
-              <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0 ${cfg.color} ${cfg.bg} border ${cfg.border}`}>{item.qty}</span>
-              <div>
-                <p className="font-bold text-slate-800 text-sm">{item.name}</p>
-                {item.note && <p className="text-[10px] text-amber-600 font-bold">⚠️ {item.note}</p>}
+            <div key={i} className="flex items-start gap-3">
+              <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0 ${cfg.color} ${cfg.bg} border ${cfg.border}`}>{item.qty}</span>
+              <div className="mt-0.5">
+                <p className="font-bold text-slate-700 text-sm">{item.name}</p>
+                {item.note && <p className="text-xs text-rose-500 font-bold mt-0.5">⚠️ {item.note}</p>}
               </div>
             </div>
           ))}
@@ -114,18 +96,18 @@ export default function KitchenDisplayPage() {
         {/* Action */}
         {STATUS_CONFIG[order.status].next && (
           <button onClick={() => advanceStatus(order.id)}
-            className={`w-full py-3 rounded-xl font-black text-sm uppercase flex items-center justify-center gap-2 transition-all
-              ${order.status === 'PENDING' ? 'bg-orange-500 text-white hover:bg-orange-600' :
+            className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm
+              ${order.status === 'PENDING' ? 'bg-amber-500 text-white hover:bg-amber-600' :
                 order.status === 'COOKING' ? 'bg-emerald-500 text-white hover:bg-emerald-600' :
-                'bg-slate-900 text-white hover:bg-primary'}`}>
-            {order.status === 'PENDING' ? <><Utensils className="w-4 h-4" /> Mulai Masak</> :
-             order.status === 'COOKING' ? <><CheckCircle className="w-4 h-4" /> Selesai — Siap Disajikan</> :
-             <><ChevronRight className="w-4 h-4" /> Tandai Tersaji</>}
+                'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
+            {order.status === 'PENDING' ? <><Utensils className="w-4 h-4" /> Mulai Memasak</> :
+             order.status === 'COOKING' ? <><CheckCircle className="w-4 h-4" /> Tandai Selesai</> :
+             <><ChevronRight className="w-4 h-4" /> Pesanan Tersaji</>}
           </button>
         )}
         {!STATUS_CONFIG[order.status].next && (
-          <div className="w-full py-3 rounded-xl bg-slate-100 text-slate-400 font-black text-sm uppercase text-center">
-            ✅ Tersaji
+          <div className="w-full py-3.5 rounded-xl bg-slate-100 text-slate-400 font-bold text-sm uppercase text-center border border-slate-200">
+            ✓ Tersaji
           </div>
         )}
       </div>
@@ -133,73 +115,77 @@ export default function KitchenDisplayPage() {
   };
 
   return (
-    <div className="p-4 bg-slate-950 min-h-screen text-white">
+    <div className="min-h-screen bg-slate-50/50 p-6 lg:p-8">
       {/* New Order Alert */}
       {newOrderAlert && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-primary text-white px-8 py-4 rounded-2xl shadow-2xl font-black text-lg flex items-center gap-3 animate-scale-up">
-          <Bell className="w-6 h-6 animate-pulse" /> Pesanan Baru Masuk!
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-white border border-slate-200 text-slate-800 px-8 py-4 rounded-2xl shadow-xl font-bold text-lg flex items-center gap-3 animate-scale-up">
+          <Bell className="w-6 h-6 text-amber-500 animate-pulse" /> Pesanan Baru Masuk!
         </div>
       )}
 
       {/* KDS Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 bg-white border border-slate-200 rounded-2xl px-6 py-4 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 border border-slate-200">
             <Utensils className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kitchen Display System</p>
-            <h1 className="text-xl font-black uppercase tracking-tight">Kasir Sakti · KDS</h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Kitchen Display System</p>
+            <h1 className="text-xl font-black text-slate-800 tracking-tight">KDS Dashboard</h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Live clock */}
-          <LiveClock />
+        <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
           {/* Stats */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 mr-2">
             {[
-              { label: 'Antri', count: pending.length, color: 'bg-amber-500' },
-              { label: 'Masak', count: cooking.length, color: 'bg-orange-500' },
-              { label: 'Siap', count: ready.length, color: 'bg-emerald-500' },
+              { label: 'Antri', count: pending.length, color: 'text-amber-600 bg-amber-50 border-amber-100' },
+              { label: 'Masak', count: cooking.length, color: 'text-orange-600 bg-orange-50 border-orange-100' },
+              { label: 'Siap', count: ready.length, color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
             ].map(s => (
-              <div key={s.label} className={`px-4 py-2 rounded-xl ${s.color} text-white text-center min-w-[60px]`}>
-                <p className="text-2xl font-black leading-none">{s.count}</p>
-                <p className="text-[9px] font-black uppercase">{s.label}</p>
+              <div key={s.label} className={`px-4 py-2 rounded-xl border ${s.color} text-center min-w-[70px]`}>
+                <p className="text-2xl font-black leading-none tracking-tight">{s.count}</p>
+                <p className="text-[9px] font-bold uppercase tracking-wider mt-1">{s.label}</p>
               </div>
             ))}
           </div>
+          
+          {/* Live clock */}
+          <LiveClock />
+          
           {/* Controls */}
-          <button onClick={() => setSoundOn(!soundOn)}
-            className={`p-2.5 rounded-xl transition-all ${soundOn ? 'bg-primary' : 'bg-slate-700'}`}>
-            <Volume2 className="w-4 h-4" />
-          </button>
-          <button onClick={() => setView(v => v === 'KANBAN' ? 'LIST' : 'KANBAN')}
-            className="p-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 transition-all">
-            <RefreshCw className="w-4 h-4" />
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => setSoundOn(!soundOn)}
+              className={`p-3 rounded-xl border transition-all ${soundOn ? 'bg-slate-100 border-slate-200 text-slate-600' : 'bg-white border-slate-200 text-slate-300'}`}>
+              <Volume2 className="w-4 h-4" />
+            </button>
+            <button onClick={() => setView(v => v === 'KANBAN' ? 'LIST' : 'KANBAN')}
+              className="p-3 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Kanban Board */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* PENDING */}
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-3 h-3 bg-amber-500 rounded-full animate-pulse" />
-            <h2 className="font-black uppercase text-sm text-amber-400">Antri ({pending.length})</h2>
+        <div className="bg-slate-100/50 rounded-2xl p-4 border border-slate-200">
+          <div className="flex items-center gap-2.5 mb-5 px-2">
+            <div className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+            <h2 className="font-bold uppercase tracking-widest text-xs text-slate-500">Antrian Masuk ({pending.length})</h2>
           </div>
           <div className="space-y-4">
             {pending.map(o => <OrderCard key={o.id} order={o} />)}
-            {pending.length === 0 && <EmptyCol label="Tidak ada pesanan antri" />}
+            {pending.length === 0 && <EmptyCol label="Tidak ada antrian" />}
           </div>
         </div>
 
         {/* COOKING */}
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse" />
-            <h2 className="font-black uppercase text-sm text-orange-400">Sedang Masak ({cooking.length})</h2>
+        <div className="bg-slate-100/50 rounded-2xl p-4 border border-slate-200">
+          <div className="flex items-center gap-2.5 mb-5 px-2">
+            <div className="w-2.5 h-2.5 bg-orange-500 rounded-full shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
+            <h2 className="font-bold uppercase tracking-widest text-xs text-slate-500">Sedang Dimasak ({cooking.length})</h2>
           </div>
           <div className="space-y-4">
             {cooking.map(o => <OrderCard key={o.id} order={o} />)}
@@ -208,10 +194,10 @@ export default function KitchenDisplayPage() {
         </div>
 
         {/* READY */}
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-3 h-3 bg-emerald-500 rounded-full" />
-            <h2 className="font-black uppercase text-sm text-emerald-400">Siap Disajikan ({ready.length})</h2>
+        <div className="bg-slate-100/50 rounded-2xl p-4 border border-slate-200">
+          <div className="flex items-center gap-2.5 mb-5 px-2">
+            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+            <h2 className="font-bold uppercase tracking-widest text-xs text-slate-500">Siap Disajikan ({ready.length})</h2>
           </div>
           <div className="space-y-4">
             {ready.map(o => <OrderCard key={o.id} order={o} />)}
@@ -221,10 +207,10 @@ export default function KitchenDisplayPage() {
       </div>
 
       {/* Footer */}
-      <div className="mt-8 pt-4 border-t border-slate-800 flex justify-between items-center text-xs font-bold text-slate-600">
-        <span>⚡ Kasir Sakti POS · Kitchen Display System · Zyntra Labs</span>
-        <span className="flex items-center gap-2">
-          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> Live — Auto-refresh setiap detik
+      <div className="mt-8 pt-6 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-400">
+        <span className="tracking-widest uppercase text-[10px]">VISTRAL POS KDS</span>
+        <span className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> Live Auto-Sync
         </span>
       </div>
     </div>
@@ -237,14 +223,14 @@ function LiveClock() {
     const i = setInterval(() => setTime(new Date().toLocaleTimeString('id-ID')), 1000);
     return () => clearInterval(i);
   }, []);
-  return <div className="bg-slate-800 px-5 py-2 rounded-xl font-black text-xl tabular-nums">{time}</div>;
+  return <div className="bg-white border border-indigo-100 text-slate-800 px-5 py-2 rounded-xl font-black text-xl tabular-nums tracking-tight shadow-sm shadow-indigo-50">{time}</div>;
 }
 
 function EmptyCol({ label }: { label: string }) {
   return (
-    <div className="border-2 border-dashed border-slate-700 rounded-2xl p-8 text-center text-slate-600">
-      <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
-      <p className="font-bold text-sm">{label}</p>
+    <div className="border-2 border-dashed border-slate-200 bg-white/50 rounded-2xl p-8 text-center text-slate-400">
+      <CheckCircle className="w-8 h-8 mx-auto mb-3 opacity-20" />
+      <p className="font-semibold text-sm">{label}</p>
     </div>
   );
 }

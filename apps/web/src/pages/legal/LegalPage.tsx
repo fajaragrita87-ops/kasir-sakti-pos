@@ -15,7 +15,7 @@ export default function LegalPage({ title }: { title: string }) {
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
               <FileText className="w-5 h-5 text-primary" /> Pendahuluan
             </h2>
-            <p>Selamat datang di Kasir Sakti POS, produk dari Zyntra Labs. Dengan menggunakan layanan kami, Anda menyetujui seluruh ketentuan yang tertulis di halaman ini.</p>
+            <p>Selamat datang di VISTRAL POS, produk dari Zyntra Labs. Dengan menggunakan layanan kami, Anda menyetujui seluruh ketentuan yang tertulis di halaman ini.</p>
           </section>
           <section>
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">

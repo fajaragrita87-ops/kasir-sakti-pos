@@ -51,20 +51,10 @@ const ROLE_ICON: Record<string, React.ReactNode> = {
 
 const SAMPLE_USERS: StaffUser[] = [
   {
-    id: '1', name: 'Superadmin Sakti', email: 'admin@saktipos.id', role: 'SUPERADMIN',
-    status: 'AKTIF', lastLogin: '2 menit lalu',
+    id: '1', name: 'Super Administrator', email: 'admin@vistralpos.id', role: 'SUPERADMIN',
+    status: 'AKTIF', lastLogin: 'Baru saja',
     permissions: ROLE_PRESETS.SUPERADMIN
-  },
-  {
-    id: '2', name: 'Andi Pratama', email: 'andi@warungsakti.id', role: 'KASIR',
-    status: 'AKTIF', shift: 'Pagi (06:00-14:00)', lastLogin: '1 jam lalu',
-    permissions: ROLE_PRESETS.KASIR
-  },
-  {
-    id: '3', name: 'Siti Aminah', email: 'siti@warungsakti.id', role: 'KASIR',
-    status: 'NONAKTIF', shift: 'Sore (14:00-22:00)', lastLogin: '2 hari lalu',
-    permissions: ROLE_PRESETS.KASIR
-  },
+  }
 ];
 
 export default function UserAdminPage() {

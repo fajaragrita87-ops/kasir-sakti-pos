@@ -10,22 +10,14 @@ interface Customer {
   segment: Segment; avgOrder: number;
 }
 
-const CUSTOMERS: Customer[] = [
-  { id: '1', name: 'Budi Santoso', phone: '08123456789', totalSpent: 1500000, visitCount: 24, lastVisit: 2, segment: 'LOYAL', avgOrder: 62500 },
-  { id: '2', name: 'Siti Aminah', phone: '08567890123', totalSpent: 450000, visitCount: 6, lastVisit: 5, segment: 'ACTIVE', avgOrder: 75000 },
-  { id: '3', name: 'Andi Wijaya', phone: '08190123456', totalSpent: 25000, visitCount: 1, lastVisit: 3, segment: 'NEW', avgOrder: 25000 },
-  { id: '4', name: 'Rina Kartika', phone: '08778899001', totalSpent: 890000, visitCount: 12, lastVisit: 22, segment: 'AT_RISK', avgOrder: 74167 },
-  { id: '5', name: 'Doni Prasetyo', phone: '08211223344', totalSpent: 320000, visitCount: 8, lastVisit: 45, segment: 'CHURNED', avgOrder: 40000 },
-  { id: '6', name: 'Maya Kusuma', phone: '08556677889', totalSpent: 2100000, visitCount: 38, lastVisit: 1, segment: 'LOYAL', avgOrder: 55263 },
-  { id: '7', name: 'Fajar Nugroho', phone: '08344556677', totalSpent: 180000, visitCount: 3, lastVisit: 18, segment: 'AT_RISK', avgOrder: 60000 },
-];
+const CUSTOMERS: Customer[] = [];
 
 const SEG_STYLE: Record<Segment, { bg: string; text: string; dot: string }> = {
-  LOYAL:   { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  ACTIVE:  { bg: 'bg-blue-100',    text: 'text-blue-700',    dot: 'bg-blue-500' },
-  NEW:     { bg: 'bg-slate-100',   text: 'text-slate-600',   dot: 'bg-slate-400' },
-  AT_RISK: { bg: 'bg-amber-100',   text: 'text-amber-700',   dot: 'bg-amber-500' },
-  CHURNED: { bg: 'bg-rose-100',    text: 'text-rose-700',    dot: 'bg-rose-500' },
+  LOYAL:   { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  ACTIVE:  { bg: 'bg-indigo-50',  text: 'text-indigo-700',  dot: 'bg-indigo-500' },
+  NEW:     { bg: 'bg-slate-50',   text: 'text-slate-600',   dot: 'bg-slate-400' },
+  AT_RISK: { bg: 'bg-amber-50',   text: 'text-amber-700',   dot: 'bg-amber-500' },
+  CHURNED: { bg: 'bg-rose-50',    text: 'text-rose-700',    dot: 'bg-rose-500' },
 };
 
 const fmtRp = (n: number) => `Rp ${n.toLocaleString('id-ID')}`;
@@ -55,38 +47,40 @@ export default function CustomerPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex justify-between items-start mb-8 flex-wrap gap-4">
+    <div className="min-h-screen bg-slate-50/50">
+    <div className="max-w-[1400px] mx-auto p-6 lg:p-8 space-y-6">
+      <div className="flex justify-between items-start flex-wrap gap-4 bg-white border border-indigo-100 rounded-2xl px-6 py-4 shadow-sm">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter italic">CRM Pelanggan</h1>
-          <p className="text-slate-500 font-medium mt-1">Analisis RFM & deteksi churn otomatis</p>
+          <span className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Customer Relationship</span>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight mt-1">CRM & Analisis Pelanggan</h1>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">Segmentasi RFM otomatis · Deteksi churn · Retensi pelanggan</p>
         </div>
-        <button className="btn-primary px-5 py-3 text-sm flex items-center gap-2">
+        <button className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold uppercase tracking-wider hover:bg-indigo-700 shadow-md shadow-indigo-200 transition-all">
           <Plus className="w-4 h-4" /> Tambah Pelanggan
         </button>
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Pelanggan', value: stats.total, color: 'text-primary', icon: <Users className="w-5 h-5" /> },
-          { label: 'Pelanggan Loyal', value: stats.loyal, color: 'text-emerald-600', icon: <Star className="w-5 h-5" /> },
-          { label: 'Perlu Perhatian', value: stats.atRisk, color: 'text-amber-600', icon: <AlertTriangle className="w-5 h-5" /> },
-          { label: 'Tidak Balik', value: stats.churned, color: 'text-rose-600', icon: <UserMinus className="w-5 h-5" /> },
+          { label: 'Total Pelanggan', value: stats.total, icon: <Users className="w-4 h-4" /> },
+          { label: 'Pelanggan Loyal', value: stats.loyal, icon: <Star className="w-4 h-4" /> },
+          { label: 'Perlu Perhatian', value: stats.atRisk, icon: <AlertTriangle className="w-4 h-4" /> },
+          { label: 'Tidak Aktif', value: stats.churned, icon: <UserMinus className="w-4 h-4" /> },
         ].map(k => (
-          <div key={k.label} className="bg-white rounded-2xl p-5 shadow-lg">
-            <div className={`inline-flex ${k.color} mb-3`}>{k.icon}</div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{k.label}</p>
-            <p className={`text-3xl font-black ${k.color} mt-1`}>{k.value}</p>
+          <div key={k.label} className="bg-white border border-indigo-100 rounded-2xl p-5 hover:border-indigo-300 transition-all group">
+            <div className="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-center text-indigo-500 mb-3 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-transparent transition-all">{k.icon}</div>
+            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{k.label}</p>
+            <p className="text-2xl font-black text-slate-800 mt-1">{k.value}</p>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex border border-indigo-200 rounded-xl overflow-hidden w-fit">
         {(['PELANGGAN', 'RFM', 'CHURN'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-6 py-3 rounded-2xl font-black text-sm uppercase transition-all ${tab === t ? 'bg-slate-900 text-white' : 'bg-white text-slate-400 hover:bg-slate-100'}`}>
+            className={`px-5 py-2.5 text-[11px] font-black uppercase tracking-wide transition-colors ${tab === t ? 'bg-indigo-600 text-white' : 'text-indigo-400 hover:bg-indigo-50'}`}>
             {t === 'RFM' ? 'Analisis RFM' : t === 'CHURN' ? 'Deteksi Churn' : 'Database'}
           </button>
         ))}
@@ -94,17 +88,17 @@ export default function CustomerPage() {
 
       {/* ── DATABASE ── */}
       {tab === 'PELANGGAN' && (
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="p-5 border-b border-slate-50 flex gap-3 flex-wrap">
+        <div className="bg-white border border-indigo-100 rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-indigo-50 flex gap-3 flex-wrap">
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari nama atau HP..." className="input-field w-full pl-9" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari nama atau HP..." className="input-field w-full pl-9 border-indigo-100 focus:border-indigo-400" />
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-1.5 flex-wrap">
               {(['SEMUA', 'LOYAL', 'ACTIVE', 'NEW', 'AT_RISK', 'CHURNED'] as const).map(s => (
                 <button key={s} onClick={() => setSegFilter(s)}
-                  className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${segFilter === s ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500'}`}>
-                  {s}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wide transition-all ${segFilter === s ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-400 border border-indigo-100 hover:border-indigo-300'}`}>
+                  {s === 'AT_RISK' ? 'AT RISK' : s}
                 </button>
               ))}
             </div>
@@ -277,6 +271,7 @@ export default function CustomerPage() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

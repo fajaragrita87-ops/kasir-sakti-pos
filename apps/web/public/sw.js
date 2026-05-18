@@ -1,14 +1,17 @@
-// Kasir Sakti POS — Service Worker
+// VISTRAL POS — Service Worker
 // Handles offline caching & background sync
 
-const CACHE_NAME = 'kasir-sakti-v1';
-const STATIC_CACHE = 'kasir-sakti-static-v1';
+const CACHE_NAME = 'vistral-pos-v4';
+const STATIC_CACHE = 'vistral-pos-static-v4';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/icons/icon.svg',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
 // Install event — cache static assets
@@ -79,7 +82,7 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   if (!event.data) return;
   const data = event.data.json();
-  self.registration.showNotification(data.title || 'Kasir Sakti', {
+  self.registration.showNotification(data.title || 'VISTRAL POS', {
     body: data.body || 'Ada notifikasi baru',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',

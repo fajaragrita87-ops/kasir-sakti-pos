@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<title>SKPL - Kasir Sakti POS v2.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;font-size:11pt;color:#1e293b;background:#fff;line-height:1.6;}
+  @page{size:A4;margin:2cm;}
+  .page-break{page-break-before:always;}
+  h1{font-size:22pt;font-weight:900;color:#1e293b;}
+  h2{font-size:14pt;font-weight:700;color:#1e293b;margin:20px 0 8px;border-bottom:2px solid #6366f1;padding-bottom:6px;}
+  h3{font-size:12pt;font-weight:700;color:#374151;margin:14px 0 6px;}
+  p,li{font-size:10.5pt;color:#374151;margin-bottom:4px;}
+  ul,ol{padding-left:20px;margin-bottom:8px;}
+  table{width:100%;border-collapse:collapse;margin:10px 0;}
+  th{background:#6366f1;color:#fff;padding:8px 10px;font-size:9.5pt;text-align:left;}
+  td{padding:7px 10px;border-bottom:1px solid #e2e8f0;font-size:9.5pt;}
+  tr:nth-child(even) td{background:#f8fafc;}
+  .cover{text-align:center;padding:80px 40px;border:3px solid #6366f1;border-radius:12px;margin-bottom:40px;}
+  .cover-logo{font-size:32pt;font-weight:900;color:#6366f1;letter-spacing:-2px;}
+  .cover-sub{font-size:13pt;color:#64748b;margin:8px 0;}
+  .badge{display:inline-block;background:#6366f1;color:#fff;padding:3px 10px;border-radius:20px;font-size:9pt;font-weight:700;}
+  .info-box{background:#f0f4ff;border-left:4px solid #6366f1;padding:10px 14px;margin:10px 0;border-radius:0 8px 8px 0;}
+  .warn-box{background:#fffbeb;border-left:4px solid #f59e0b;padding:10px 14px;margin:10px 0;border-radius:0 8px 8px 0;}
+  .section-num{color:#6366f1;font-weight:900;}
+  .toc li{margin:4px 0;}
+  .toc a{color:#6366f1;text-decoration:none;}
+  footer{text-align:center;font-size:9pt;color:#94a3b8;margin-top:40px;border-top:1px solid #e2e8f0;padding-top:12px;}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-logo">⚡ KASIR SAKTI POS</div>
+  <div class="cover-sub">Platform SaaS Point of Sale Generasi Baru</div>
+  <br>
+  <h1>SPESIFIKASI KEBUTUHAN PERANGKAT LUNAK</h1>
+  <p style="font-size:13pt;font-weight:700;">(Software Requirements Specification — SRS/SKPL)</p>
+  <br>
+  <table style="width:60%;margin:0 auto;text-align:left;">
+    <tr><td><b>Versi Dokumen</b></td><td>2.0 Enterprise</td></tr>
+    <tr><td><b>Tanggal</b></td><td>9 Mei 2026</td></tr>
+    <tr><td><b>Status</b></td><td><span class="badge">FINAL</span></td></tr>
+    <tr><td><b>Pengembang</b></td><td>Zyntra Labs</td></tr>
+    <tr><td><b>Platform</b></td><td>Web SaaS (React + Node.js)</td></tr>
+  </table>
+</div>
+
+<!-- TOC -->
+<h2>Daftar Isi</h2>
+<ol class="toc">
+  <li><a href="#s1">Pendahuluan</a></li>
+  <li><a href="#s2">Deskripsi Umum Sistem</a></li>
+  <li><a href="#s3">Aktor & Peran Pengguna</a></li>
+  <li><a href="#s4">Kebutuhan Fungsional</a></li>
+  <li><a href="#s5">Kebutuhan Non-Fungsional</a></li>
+  <li><a href="#s6">Arsitektur & Teknologi</a></li>
+  <li><a href="#s7">Model Monetisasi</a></li>
+  <li><a href="#s8">Modul & Fitur Lengkap</a></li>
+  <li><a href="#s9">Diagram Alur Sistem</a></li>
+  <li><a href="#s10">Rencana Pengembangan</a></li>
+</ol>
+
+<div class="page-break"></div>
+
+<!-- S1 -->
+<h2 id="s1"><span class="section-num">1.</span> Pendahuluan</h2>
+
+<h3>1.1 Tujuan Dokumen</h3>
+<p>Dokumen ini merupakan Spesifikasi Kebutuhan Perangkat Lunak (SKPL) untuk sistem <b>Kasir Sakti POS versi 2.0 Enterprise</b>. Dokumen ini mendeskripsikan kebutuhan fungsional, non-fungsional, arsitektur sistem, dan model bisnis platform secara menyeluruh.</p>
+
+<h3>1.2 Ruang Lingkup</h3>
+<p>Kasir Sakti POS adalah platform SaaS (Software as a Service) berbasis web yang menyediakan solusi Point of Sale modern untuk bisnis ritel dan food & beverage di Indonesia. Sistem mencakup:</p>
+<ul>
+  <li>Transaksi kasir real-time dengan berbagai metode pembayaran</li>
+  <li>Manajemen inventori, resep, dan bahan baku</li>
+  <li>Sistem HRD, absensi, dan payroll karyawan</li>
+  <li>Akuntansi terintegrasi dan laporan keuangan</li>
+  <li>Program loyalitas pelanggan multi-tier</li>
+  <li>Kitchen Display System (KDS)</li>
+  <li>Integrasi pesanan online (GoFood, GrabFood, WhatsApp)</li>
+  <li>Sistem Anti-Antri berbasis QR Code</li>
+  <li>Monetisasi berbasis Koin (Pay-As-You-Go)</li>
+</ul>
+
+<h3>1.3 Definisi & Singkatan</h3>
+<table>
+  <tr><th>Istilah</th><th>Definisi</th></tr>
+  <tr><td>POS</td><td>Point of Sale — sistem transaksi penjualan</td></tr>
+  <tr><td>SaaS</td><td>Software as a Service — perangkat lunak berbasis langganan cloud</td></tr>
+  <tr><td>PAYG</td><td>Pay As You Go — model bayar sesuai penggunaan</td></tr>
+  <tr><td>KDS</td><td>Kitchen Display System — layar pemantau dapur</td></tr>
+  <tr><td>BOM</td><td>Bill of Materials — daftar resep/bahan baku produk</td></tr>
+  <tr><td>RBAC</td><td>Role-Based Access Control — kontrol akses berbasis peran</td></tr>
+  <tr><td>CRM</td><td>Customer Relationship Management</td></tr>
+  <tr><td>SA</td><td>Super Admin — administrator tingkat platform</td></tr>
+  <tr><td>BPJS</td><td>Badan Penyelenggara Jaminan Sosial</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- S2 -->
+<h2 id="s2"><span class="section-num">2.</span> Deskripsi Umum Sistem</h2>
+
+<h3>2.1 Perspektif Produk</h3>
+<div class="info-box">
+  <b>Kasir Sakti POS</b> diposisikan sebagai alternatif premium berbiaya rendah terhadap kompetitor seperti Moka POS, iSeller, dan Majoo. Model PAYG berbasis Koin memastikan merchant hanya membayar fitur yang benar-benar mereka gunakan, sedangkan core kasir (transaksi dasar) tersedia <b>gratis selamanya</b>.
+</div>
+
+<h3>2.2 Fungsi Utama Sistem</h3>
+<ul>
+  <li>Memproses transaksi penjualan secara cepat dan akurat</li>
+  <li>Mengelola stok produk secara real-time dengan dukungan BOM/Resep</li>
+  <li>Menyediakan laporan keuangan dan analitik bisnis komprehensif</li>
+  <li>Mengotomasi penggajian karyawan sesuai perundangan Indonesia</li>
+  <li>Mengintegrasikan pesanan dari berbagai platform online ke satu dashboard</li>
+  <li>Menyediakan infrastruktur multi-tenant untuk ribuan merchant</li>
+</ul>
+
+<h3>2.3 Karakteristik Pengguna</h3>
+<table>
+  <tr><th>Segmen</th><th>Karakteristik</th><th>Contoh</th></tr>
+  <tr><td>F&B</td><td>Butuh KDS, anti-antri, manajemen resep</td><td>Kafe, restoran, cloud kitchen</td></tr>
+  <tr><td>Retail</td><td>Butuh stok, barcode, laporan omzet</td><td>Minimarket, toko fashion, apotek</td></tr>
+  <tr><td>Jasa</td><td>Butuh CRM, booking, loyalty</td><td>Salon, bengkel, klinik</td></tr>
+  <tr><td>Enterprise</td><td>Multi-outlet, HRD besar, akuntansi</td><td>Franchise, mall tenant</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- S3 -->
+<h2 id="s3"><span class="section-num">3.</span> Aktor & Peran Pengguna</h2>
+
+<table>
+  <tr><th>Peran</th><th>Kode</th><th>Hak Akses</th></tr>
+  <tr><td><b>Super Admin</b></td><td>SUPERADMIN</td><td>Akses penuh seluruh sistem, konfigurasi harga koin, maintenance mode, manajemen tenant</td></tr>
+  <tr><td><b>Merchant / Owner</b></td><td>MERCHANT</td><td>Seluruh fitur tenant sendiri — dashboard, POS, HRD, akuntansi, pengaturan</td></tr>
+  <tr><td><b>Staff / Kasir</b></td><td>STAFF</td><td>Hanya akses POS (kasir), absensi mandiri</td></tr>
+  <tr><td><b>Pelanggan</b></td><td>CUSTOMER</td><td>Akses halaman order QR, status pesanan, tukar poin loyalty</td></tr>
+</table>
+
+<div class="warn-box">
+  <b>Catatan Keamanan:</b> Validasi RBAC diterapkan di sisi server (API middleware) dan dikuatkan oleh JWT token. Manipulasi client-side tidak memberikan akses yang tidak sah.
+</div>
+
+<!-- S4 -->
+<h2 id="s4"><span class="section-num">4.</span> Kebutuhan Fungsional</h2>
+
+<h3>4.1 Modul POS (Kasir)</h3>
+<ul>
+  <li>Pencarian produk by nama / SKU / barcode</li>
+  <li>Manajemen keranjang: tambah, kurang, hapus item</li>
+  <li>Diskon per item atau total transaksi (nominal/persen)</li>
+  <li>Metode pembayaran: Tunai, QRIS, Kartu Debit, Piutang</li>
+  <li>Kembalian otomatis untuk pembayaran tunai</li>
+  <li>Struk digital (print / WhatsApp)</li>
+  <li>Catatan audit transaksi (void, diskon) secara otomatis</li>
+</ul>
+
+<h3>4.2 Modul Inventori & Resep</h3>
+<ul>
+  <li>CRUD produk dengan foto, SKU, kategori, satuan</li>
+  <li>Sistem BOM/Resep: stok bahan baku berkurang otomatis saat produk terjual</li>
+  <li>Alert stok menipis dan habis secara real-time</li>
+  <li>Kalkulasi margin keuntungan otomatis (HPP vs. Harga Jual)</li>
+  <li>Manajemen kategori dinamis (tambah/hapus/rename)</li>
+</ul>
+
+<h3>4.3 Modul HRD & Payroll</h3>
+<ul>
+  <li>Registrasi karyawan dengan data lengkap (nama, jabatan, gaji, rekening, BPJS)</li>
+  <li>Absensi selfie + GPS real-time (anti-cheat)</li>
+  <li>Kalkulasi payroll otomatis: gaji pokok + tunjangan + lembur − BPJS (UU Cipta Kerja No.6/2023)</li>
+  <li>Perhitungan BPJS Kesehatan (1% karyawan, 4% perusahaan) & Ketenagakerjaan (PP 44/2015)</li>
+  <li>Manajemen Izin, Sakit, Cuti dengan approval flow</li>
+  <li>Jadwal Shift mingguan</li>
+  <li>Kalkulator THR otomatis (UU Ketenagakerjaan Pasal 79)</li>
+  <li>Export slip gaji / kirim via WhatsApp</li>
+</ul>
+
+<h3>4.4 Modul Akuntansi</h3>
+<ul>
+  <li>Jurnal manual: Pengeluaran, Pemasukan, Transfer Kas dengan double-entry otomatis</li>
+  <li>Kategori akun kustom (user dapat membuat kategori sendiri)</li>
+  <li>Manajemen Aset Tetap dengan kalkulasi penyusutan otomatis</li>
+  <li>Laporan: Laba Rugi, Neraca, Arus Kas, Buku Besar, Perubahan Modal</li>
+  <li>Export laporan ke PDF / Excel</li>
+</ul>
+
+<h3>4.5 Modul Loyalty Program</h3>
+<ul>
+  <li>Sistem poin otomatis per transaksi</li>
+  <li>4 Tier: Bronze, Silver, Gold, Platinum</li>
+  <li>Penukaran poin menjadi voucher diskon</li>
+  <li>Analisis RFM (Recency, Frequency, Monetary) pelanggan</li>
+  <li>Notifikasi poin ke pelanggan (WhatsApp)</li>
+</ul>
+
+<h3>4.6 Kitchen Display System (KDS)</h3>
+<ul>
+  <li>Tampilan Kanban Board pesanan dapur real-time</li>
+  <li>Status: Antri → Masak → Siap → Selesai</li>
+  <li>SLA Timer dengan peringatan keterlambatan</li>
+  <li>Sinkronisasi instan dari kasir</li>
+</ul>
+
+<h3>4.7 Modul Pesanan Online & Reservasi</h3>
+<ul>
+  <li>Integrasi GoFood, GrabFood, WhatsApp Order, Reservasi langsung</li>
+  <li>Notifikasi real-time dengan suara berbeda per platform</li>
+  <li>Dashboard terpusat semua saluran pesanan</li>
+  <li>Manajemen reservasi meja/jadwal</li>
+</ul>
+
+<h3>4.8 Sistem Anti-Antri (QR Table)</h3>
+<ul>
+  <li>QR Code unik per meja / area</li>
+  <li>Pelanggan scan → tampil menu digital → pesan → bayar mandiri</li>
+  <li>Pesanan masuk otomatis ke kasir dan KDS</li>
+</ul>
+
+<h3>4.9 Sistem Koin & Billing (PAYG)</h3>
+<ul>
+  <li>Koin sebagai mata uang aktivasi fitur</li>
+  <li>Setiap fitur tersedia dalam paket Harian (1 koin), Mingguan (6 koin), Bulanan (27 koin)</li>
+  <li>KDS khusus bulanan (28 koin)</li>
+  <li>Countdown real-time masa berlaku fitur</li>
+  <li>Histori transaksi koin lengkap</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- S5 -->
+<h2 id="s5"><span class="section-num">5.</span> Kebutuhan Non-Fungsional</h2>
+
+<table>
+  <tr><th>Aspek</th><th>Kebutuhan</th><th>Target</th></tr>
+  <tr><td>Performa</td><td>Waktu respons transaksi POS</td><td>&lt; 2 detik</td></tr>
+  <tr><td>Ketersediaan</td><td>Uptime sistem</td><td>≥ 99.5% per bulan</td></tr>
+  <tr><td>Keamanan</td><td>Enkripsi data transmisi</td><td>TLS 1.3 / HTTPS</td></tr>
+  <tr><td>Keamanan</td><td>Autentikasi token</td><td>JWT + Refresh Token</td></tr>
+  <tr><td>Skalabilitas</td><td>Jumlah tenant simultan</td><td>≥ 10.000 merchant</td></tr>
+  <tr><td>Kompatibilitas</td><td>Browser yang didukung</td><td>Chrome, Firefox, Safari, Edge (versi terbaru)</td></tr>
+  <tr><td>Aksesibilitas</td><td>Perangkat</td><td>Desktop, Tablet, Smartphone (Responsive)</td></tr>
+  <tr><td>PWA</td><td>Instalasi sebagai aplikasi</td><td>Didukung penuh (Service Worker + Manifest)</td></tr>
+  <tr><td>Audit</td><td>Log seluruh aksi sensitif</td><td>Void, diskon, perubahan harga, login</td></tr>
+</table>
+
+<!-- S6 -->
+<h2 id="s6"><span class="section-num">6.</span> Arsitektur & Teknologi</h2>
+
+<h3>6.1 Frontend</h3>
+<ul>
+  <li><b>Framework:</b> React 18 (TypeScript)</li>
+  <li><b>Styling:</b> Tailwind CSS v3</li>
+  <li><b>State Management:</b> Zustand</li>
+  <li><b>Routing:</b> React Router v6</li>
+  <li><b>Icons:</b> Lucide React</li>
+  <li><b>PWA:</b> Service Worker + Web Manifest</li>
+  <li><b>Build Tool:</b> Vite</li>
+</ul>
+
+<h3>6.2 Backend</h3>
+<ul>
+  <li><b>Runtime:</b> Node.js (Express / Fastify)</li>
+  <li><b>ORM:</b> Prisma ORM</li>
+  <li><b>Database:</b> PostgreSQL</li>
+  <li><b>Auth:</b> JWT (Access + Refresh Token)</li>
+  <li><b>File Storage:</b> Cloudinary / AWS S3</li>
+</ul>
+
+<h3>6.3 Infrastruktur</h3>
+<ul>
+  <li><b>Deployment:</b> Vercel (Frontend) + Railway/Render (Backend)</li>
+  <li><b>CI/CD:</b> GitHub Actions</li>
+  <li><b>Monitoring:</b> Sentry (Error Tracking)</li>
+</ul>
+
+<!-- S7 -->
+<h2 id="s7"><span class="section-num">7.</span> Model Monetisasi</h2>
+
+<table>
+  <tr><th>Fitur</th><th>Harian</th><th>Mingguan</th><th>Bulanan</th></tr>
+  <tr><td>Core POS (Kasir Dasar)</td><td colspan="3" style="text-align:center;color:#16a34a;font-weight:700;">GRATIS SELAMANYA</td></tr>
+  <tr><td>Inventori & Resep</td><td>1 koin</td><td>6 koin</td><td>27 koin</td></tr>
+  <tr><td>HRD & Payroll</td><td>1 koin</td><td>6 koin</td><td>27 koin</td></tr>
+  <tr><td>Akuntansi & Kas</td><td>1 koin</td><td>6 koin</td><td>27 koin</td></tr>
+  <tr><td>Loyalty Program</td><td>1 koin</td><td>6 koin</td><td>27 koin</td></tr>
+  <tr><td>Anti-Antri QR</td><td>1 koin</td><td>6 koin</td><td>27 koin</td></tr>
+  <tr><td>Pesanan Online</td><td>1 koin</td><td>6 koin</td><td>27 koin</td></tr>
+  <tr><td>AI Menu Maker</td><td>1 koin</td><td>6 koin</td><td>27 koin</td></tr>
+  <tr><td>Piutang Digital</td><td>1 koin</td><td>6 koin</td><td>27 koin</td></tr>
+  <tr><td>Kitchen Display (KDS)</td><td colspan="2" style="text-align:center;">—</td><td>28 koin</td></tr>
+</table>
+
+<div class="info-box">
+  <b>Konversi:</b> 1 Koin ≈ Rp 1.000. Harga koin dapat dikonfigurasi oleh Super Admin kapan saja melalui panel "Sistem Inti (SA)" tanpa perlu deploy ulang.
+</div>
+
+<div class="page-break"></div>
+
+<!-- S8 -->
+<h2 id="s8"><span class="section-num">8.</span> Ringkasan Modul & Status</h2>
+
+<table>
+  <tr><th>Modul</th><th>Status</th><th>Akses</th><th>Catatan</th></tr>
+  <tr><td>Dashboard & Analitik</td><td>✅ Aktif</td><td>Semua</td><td>KPI, grafik, gamifikasi badge</td></tr>
+  <tr><td>POS / Kasir</td><td>✅ Aktif</td><td>Semua</td><td>Gratis selamanya</td></tr>
+  <tr><td>Inventori & Resep</td><td>✅ Aktif</td><td>Merchant</td><td>Termasuk BOM/Resep multi-bahan</td></tr>
+  <tr><td>HRD & Payroll</td><td>✅ Aktif</td><td>Merchant</td><td>Sesuai UU Cipta Kerja No.6/2023</td></tr>
+  <tr><td>Akuntansi</td><td>✅ Aktif</td><td>Merchant</td><td>Double-entry, laporan lengkap</td></tr>
+  <tr><td>CRM / Pelanggan</td><td>✅ Aktif</td><td>Merchant</td><td>Database pelanggan + riwayat</td></tr>
+  <tr><td>Loyalty Program</td><td>✅ Aktif</td><td>Merchant</td><td>4 tier + RFM analisis</td></tr>
+  <tr><td>Kitchen Display (KDS)</td><td>✅ Aktif</td><td>Merchant</td><td>Kanban board real-time</td></tr>
+  <tr><td>Anti-Antri QR</td><td>✅ Aktif</td><td>Merchant</td><td>Self-order pelanggan via QR</td></tr>
+  <tr><td>Pesanan Online</td><td>✅ Aktif</td><td>Merchant</td><td>GoFood, GrabFood, WA, Reservasi</td></tr>
+  <tr><td>AI Menu Maker</td><td>✅ Aktif</td><td>Merchant</td><td>Desain menu via prompt AI</td></tr>
+  <tr><td>Piutang Digital</td><td>✅ Aktif</td><td>Merchant</td><td>Kelola hutang pelanggan</td></tr>
+  <tr><td>Migrasi Data</td><td>✅ Aktif</td><td>Merchant</td><td>Import dari Moka, iSeller, CSV</td></tr>
+  <tr><td>Koin & Billing</td><td>✅ Aktif</td><td>Merchant</td><td>PAYG, countdown real-time</td></tr>
+  <tr><td>Audit Log</td><td>✅ Aktif</td><td>SA & Merchant</td><td>Log semua aksi sensitif</td></tr>
+  <tr><td>User & Admin Panel</td><td>✅ Aktif</td><td>Super Admin</td><td>Manajemen seluruh tenant</td></tr>
+  <tr><td>Sistem Inti (SA)</td><td>✅ Aktif</td><td>Super Admin Only</td><td>Harga koin, maintenance, promo</td></tr>
+  <tr><td>Panduan Pengguna</td><td>✅ Aktif</td><td>Semua</td><td>Terintegrasi di dashboard</td></tr>
+</table>
+
+<!-- S9 -->
+<h2 id="s9"><span class="section-num">9.</span> Alur Sistem Utama</h2>
+
+<h3>9.1 Alur Transaksi POS</h3>
+<ol>
+  <li>Kasir login → Buka menu POS</li>
+  <li>Pilih produk → Masuk keranjang → Stok dicek real-time</li>
+  <li>Terapkan diskon (opsional) → Pilih metode bayar</li>
+  <li>Konfirmasi pembayaran → Struk dicetak / dikirim WA</li>
+  <li>Stok produk (dan bahan baku jika BOM) berkurang otomatis</li>
+  <li>Data transaksi masuk ke laporan akuntansi & audit log</li>
+</ol>
+
+<h3>9.2 Alur Aktivasi Fitur Premium</h3>
+<ol>
+  <li>Owner buka Pengaturan → App Market</li>
+  <li>Pilih modul → Pilih durasi (Harian/Mingguan/Bulanan)</li>
+  <li>Sistem debit Koin sesuai harga</li>
+  <li>Menu fitur langsung muncul di sidebar dalam 5 detik</li>
+  <li>Countdown timer berjalan real-time hingga masa berlaku habis</li>
+</ol>
+
+<!-- S10 -->
+<h2 id="s10"><span class="section-num">10.</span> Rencana Pengembangan</h2>
+
+<table>
+  <tr><th>Fase</th><th>Target</th><th>Fitur</th></tr>
+  <tr><td>v2.1</td><td>Q3 2026</td><td>Integrasi Webhook GoFood/GrabFood resmi, pembayaran koin via Midtrans</td></tr>
+  <tr><td>v2.2</td><td>Q4 2026</td><td>Laporan pajak otomatis (PPN, PPh), multi-outlet dashboard</td></tr>
+  <tr><td>v3.0</td><td>Q1 2027</td><td>AI demand forecasting, chatbot support terintegrasi, mobile native app</td></tr>
+</table>
+
+<footer>
+  <p>© 2026 Zyntra Labs — Kasir Sakti POS v2.0 Enterprise | SKPL Dokumen Resmi</p>
+  <p>Dokumen ini bersifat konfidensial dan hanya untuk keperluan internal dan audit.</p>
+</footer>
+
+</body>
+</html>

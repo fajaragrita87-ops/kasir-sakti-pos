@@ -96,7 +96,7 @@ export default function PWAInstallBanner() {
           </div>
           <div className="flex-1">
             <p className="font-bold text-sm">Update Tersedia!</p>
-            <p className="text-xs text-blue-100">Versi terbaru Kasir Sakti siap digunakan</p>
+            <p className="text-xs text-blue-100">Versi terbaru VISTRAL POS siap digunakan</p>
           </div>
           <button onClick={handleUpdate} className="bg-white text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg">
             Update
@@ -117,7 +117,7 @@ export default function PWAInstallBanner() {
                 <Smartphone className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="font-black text-base">Install Kasir Sakti</p>
+                <p className="font-black text-base">Install VISTRAL POS</p>
                 <p className="text-blue-300 text-xs">Tambahkan ke Home Screen iPhone/iPad</p>
               </div>
             </div>
@@ -153,7 +153,7 @@ export default function PWAInstallBanner() {
             <Smartphone className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-black text-sm">Install Kasir Sakti</p>
+            <p className="font-black text-sm">Install VISTRAL POS</p>
             <p className="text-blue-300 text-xs">Akses lebih cepat, bisa pakai offline!</p>
           </div>
           <button onClick={handleDismiss} className="text-slate-400 hover:text-white p-1 flex-shrink-0">

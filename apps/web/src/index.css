@@ -1,13 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
 @layer base {
   :root {
-    --primary: #8B5CF6;
-    --primary-dark: #7C3AED;
+    --primary: #4f46e5; /* Indigo 600 */
+    --primary-dark: #4338ca; /* Indigo 700 */
   }
   body {
     @apply bg-slate-50 text-slate-900 antialiased overflow-x-hidden;
@@ -27,15 +26,15 @@
 
   /* Buttons */
   .btn-primary {
-    @apply bg-primary text-white font-black rounded-2xl transition-all duration-200 hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/20 active:scale-95 uppercase tracking-widest text-xs;
+    @apply bg-indigo-600 text-white font-bold rounded-xl transition-all duration-200 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-200 active:scale-95 uppercase tracking-wider text-xs;
   }
   .btn-premium {
-    @apply relative overflow-hidden bg-primary text-white font-black rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-xl shadow-primary/20 hover:shadow-primary/40 uppercase tracking-widest;
+    @apply relative overflow-hidden bg-indigo-600 text-white font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-200 hover:shadow-indigo-300 uppercase tracking-wider;
   }
 
   /* Form */
   .input-field {
-    @apply w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-slate-900 font-medium placeholder-slate-300 focus:outline-none focus:border-primary focus:bg-white transition-all duration-200;
+    @apply w-full px-4 py-3 bg-white border border-indigo-100 rounded-xl text-slate-800 font-medium placeholder-slate-300 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 transition-all duration-200;
   }
 
   /* Badge */
@@ -45,7 +44,7 @@
 
   /* Text utilities */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600;
   }
 
   /* Animations */
@@ -81,8 +80,58 @@
   }
 
   /* Scrollbar */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { @apply bg-slate-200 rounded-full; }
   ::-webkit-scrollbar-thumb:hover { @apply bg-slate-300; }
+
+  /* Thermal Print Specific Styles */
+  @media print {
+    @page { margin: 0; }
+    
+    /* Sembunyikan SEMUA elemen body secara default */
+    body * {
+      visibility: hidden;
+    }
+    
+    /* Matikan background warna/gradient agar print hitam putih lebih bersih */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      text-shadow: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Tampilkan hanya area yang punya id "printable-area" dan anak-anaknya */
+    #printable-area, #printable-area * {
+      visibility: visible;
+    }
+
+    /* Posisikan printable area ke pojok kiri atas secara absolut dan buat fluid 100% */
+    #printable-area {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100% !important; /* Dibuat 100% agar otomatis fit ke 58mm atau 80mm sesuai setting driver printer */
+      max-width: 80mm; /* Mencegah melebar ke ukuran A4 jika tercetak tidak sengaja di printer biasa */
+      margin: 0 auto;
+      padding: 0 !important;
+      color: black !important;
+      background-color: white !important;
+      font-size: 12px; /* Ukuran font aman untuk thermal 58mm */
+    }
+
+    /* Sembunyikan elemen dekoratif yang ada di class .print\:hidden yang sudah diset tailwind 
+       Ini back-up memastikan tombol dan header tidak ikut terprint */
+    .print\:hidden, .print\:hidden * {
+      display: none !important;
+    }
+  }
 }

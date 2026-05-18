@@ -48,6 +48,8 @@ model Outlet {
   operatingHours  Json?                   // jam operasional Anti Antri
   maxCashiers     Int       @default(10)
   maxProducts     Int       @default(5000)
+  businessType    BusinessType @default(FNB)
+  enabledFeatures Json?                   // Array of string: ["POS", "INVENTORY", "HRD", "LOYALTY", "CRM", "KDS"]
   users           User[]
   products        Product[]
   transactions    Transaction[]
@@ -56,6 +58,12 @@ model Outlet {
   customers       Customer[]
   tables          DiningTable[]           // untuk Anti Antri
   createdAt       DateTime  @default(now())
+}
+
+enum BusinessType {
+  FNB
+  RETAIL
+  SERVICES
 }
 
 // === PRODUCT & INVENTORY ===

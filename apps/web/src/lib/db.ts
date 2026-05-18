@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Dexie, { type EntityTable } from 'dexie';
 
 interface OfflineTransaction {

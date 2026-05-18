@@ -2,11 +2,7 @@ import React from 'react';
 import { BookOpen, Calendar, UserPlus, Search, AlertCircle, CheckCircle2, ChevronRight, Filter } from 'lucide-react';
 
 export default function DebtPage() {
-  const debts = [
-    { id: '1', customer: 'Bapak Ahmad', total: 450000, date: '2026-05-01', status: 'OVERDUE' },
-    { id: '2', customer: 'Ibu Ratna', total: 125000, date: '2026-05-04', status: 'PENDING' },
-    { id: '3', customer: 'Warung Pojok', total: 2850000, date: '2026-04-28', status: 'OVERDUE' },
-  ];
+  const debts: any[] = [];
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -24,26 +20,26 @@ export default function DebtPage() {
 
       {/* Debt Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-        <div className="md:col-span-2 card border-0 shadow-xl bg-slate-900 text-white p-8 overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 rounded-full blur-[100px] -z-0"></div>
+        <div className="md:col-span-2 card border border-slate-200 shadow-sm bg-white p-8 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-slate-50 rounded-full blur-[80px] -z-0"></div>
           <div className="relative z-10">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Total Piutang Berjalan</p>
-            <h3 className="text-4xl font-black mb-6">Rp 3.425.000</h3>
+            <h3 className="text-4xl font-black text-slate-900 mb-6">Rp 0</h3>
             <div className="flex gap-4">
-              <div className="bg-white/5 p-3 rounded-2xl border border-white/10">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Overdue</p>
-                <p className="text-lg font-black text-rose-500">Rp 3.300.000</p>
+                <p className="text-lg font-black text-rose-500">Rp 0</p>
               </div>
-              <div className="bg-white/5 p-3 rounded-2xl border border-white/10">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Due Soon</p>
-                <p className="text-lg font-black text-amber-500">Rp 125.000</p>
+                <p className="text-lg font-black text-amber-500">Rp 0</p>
               </div>
             </div>
           </div>
         </div>
-        <div className="card border-0 shadow-xl p-8 bg-white flex flex-col justify-center text-center">
+        <div className="card border border-slate-200 shadow-sm p-8 bg-white flex flex-col justify-center text-center">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Tertagih Bulan Ini</p>
-          <h3 className="text-3xl font-black text-emerald-500 tracking-tight">Rp 12.8M</h3>
+          <h3 className="text-3xl font-black text-emerald-500 tracking-tight">Rp 0</h3>
           <p className="text-[10px] text-slate-400 font-bold mt-2">+15.2% VS BULAN LALU</p>
         </div>
         <div className="card border-0 shadow-xl p-8 bg-white flex flex-col justify-center text-center border-l-8 border-primary">

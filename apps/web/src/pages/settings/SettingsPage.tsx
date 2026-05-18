@@ -3,12 +3,15 @@ import {
   Settings, Store, Globe, Bell, Printer, Palette,
   CreditCard, MapPin, Phone, Mail, Clock, Wifi,
   Save, ChevronRight, Check, AlertCircle, Monitor,
-  Receipt, User, Lock, Shield
+  Receipt, User, Lock, Shield, Blocks, ExternalLink, RefreshCw, Trash2, Database
 } from 'lucide-react';
+import { useAuthStore } from '../../stores/auth.store';
+import { generateSecureToken } from '../../lib/security';
 
-type Tab = 'OUTLET' | 'STRUK' | 'NOTIF' | 'PAJAK' | 'APPEARANCE' | 'SECURITY';
+type Tab = 'OUTLET' | 'STRUK' | 'NOTIF' | 'PAJAK' | 'APPEARANCE' | 'SECURITY' | 'APPMARKET' | 'INTEGRATION';
 
 export default function SettingsPage() {
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<Tab>('OUTLET');
   const [saved, setSaved] = useState(false);
 
@@ -42,11 +45,13 @@ export default function SettingsPage() {
             { key: 'PAJAK', label: 'Pajak & Biaya', icon: <CreditCard className="w-5 h-5" /> },
             { key: 'APPEARANCE', label: 'Tampilan', icon: <Palette className="w-5 h-5" /> },
             { key: 'SECURITY', label: 'Keamanan', icon: <Shield className="w-5 h-5" /> },
+            { key: 'APPMARKET', label: 'App Market', icon: <Blocks className="w-5 h-5" /> },
+            { key: 'INTEGRATION', label: 'Integrasi & API', icon: <Globe className="w-5 h-5" /> },
           ] as { key: Tab, label: string, icon: React.ReactNode }[]).map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl font-bold text-sm transition-all ${activeTab === tab.key ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-500 hover:bg-white hover:shadow-lg'}`}
+              className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl font-bold text-sm transition-all ${activeTab === tab.key ? ((tab.key as string) === 'SUPERADMIN' ? 'bg-rose-600 text-white shadow-xl shadow-rose-500/20' : 'bg-blue-600 text-white shadow-xl') : ((tab.key as string) === 'SUPERADMIN' ? 'text-rose-500 hover:bg-rose-50' : 'text-slate-500 hover:bg-white hover:shadow-lg')}`}
             >
               {tab.icon}
               {tab.label}
@@ -61,8 +66,10 @@ export default function SettingsPage() {
           {activeTab === 'STRUK' && <StrukSettings />}
           {activeTab === 'NOTIF' && <NotifSettings />}
           {activeTab === 'PAJAK' && <TaxSettings />}
-          {activeTab === 'APPEARANCE' && <AppearanceSettings />}
-          {activeTab === 'SECURITY' && <SecuritySettings />}
+          { activeTab === 'APPEARANCE' && <AppearanceSettings /> }
+          { activeTab === 'SECURITY' && <SecuritySettings /> }
+          { activeTab === 'APPMARKET' && <AppMarketSettings /> }
+          { activeTab === 'INTEGRATION' && <IntegrationSettings /> }
         </div>
       </div>
     </div>
@@ -127,7 +134,7 @@ function OutletSettings() {
             </div>
           </Field>
           <Field label="Email Outlet">
-            <input type="email" defaultValue="warung@saktipos.id" className="input-field w-full" />
+            <input type="email" defaultValue="warung@outlet.id" className="input-field w-full" />
           </Field>
           <Field label="Alamat Lengkap">
             <textarea rows={2} defaultValue="Jl. Merdeka No. 1, Jakarta Pusat" className="input-field w-full resize-none" />
@@ -181,7 +188,7 @@ function StrukSettings() {
       <SectionCard title="Opsi Cetak">
         <Toggle label="Cetak Otomatis Setelah Transaksi" desc="Struk langsung dicetak tanpa konfirmasi" defaultVal={true} />
         <Toggle label="Tampilkan Logo di Struk" defaultVal={true} />
-        <Toggle label="Tampilkan Watermark Kasir Sakti" desc="Wajib sesuai Patch 14 — tidak bisa dinonaktifkan" defaultVal={true} />
+        <Toggle label="Tampilkan Watermark VISTRAL POS" desc="Wajib sesuai Patch 14 — tidak bisa dinonaktifkan" defaultVal={true} />
         <Toggle label="Cetak Nomor Antrian" desc="Untuk bisnis dengan antrian" />
         <Toggle label="Struk Digital via WhatsApp" desc="Kirim struk ke pelanggan otomatis" />
         <Field label="Ukuran Struk">
@@ -312,3 +319,112 @@ function SecuritySettings() {
     </div>
   );
 }
+
+function AppMarketSettings() {
+  const { user, setAuth } = useAuthStore();
+  const features = user?.enabledFeatures || [];
+
+  const toggleFeature = (feat: string) => {
+    if (!user) return;
+    const newFeatures = features.includes(feat) 
+      ? features.filter(f => f !== feat)
+      : [...features, feat];
+    
+    // update user context with new secure token
+    setAuth({ ...user, enabledFeatures: newFeatures }, generateSecureToken());
+  };
+
+  const modules = [
+    { key: 'POS', label: 'Kasir (POS)', desc: 'Modul kasir utama untuk memproses transaksi penjualan.', required: true },
+    { key: 'INVENTORY', label: 'Manajemen Inventori & Stok', desc: 'Dilengkapi dengan Stock Opname Real-Time & HPP otomatis.' },
+    { key: 'PURCHASE_ORDER', label: 'Sistem PO & Supplier', desc: 'Manajemen pengadaan barang dan tagihan supplier terintegrasi.' },
+    { key: 'ANTI_ANTRI', label: 'QR Order (Anti-Antri)', desc: 'Pelanggan bisa pesan dari meja melalui scan QR.' },
+    { key: 'CRM', label: 'Pelanggan (CRM)', desc: 'Database pelanggan untuk analisis dan pemasaran.' },
+    { key: 'LOYALTY', label: 'Loyalty Program', desc: 'Beri poin dan hadiah untuk mempertahankan pelanggan.' },
+    { key: 'DEBT', label: 'Buku Piutang / Kasbon', desc: 'Catat pelanggan yang berhutang dan kelola pembayaran.' },
+    { key: 'HRD', label: 'HRD & Payroll', desc: 'Absensi karyawan (selfie + GPS) dan penggajian.' },
+    { key: 'ACCOUNTING', label: 'Akuntansi & Keuangan', desc: 'Sistem akuntansi ganda, manajemen aset, dan kas.' },
+    { key: 'ONLINE_ORDER', label: 'Integrasi E-Commerce & Pesanan Online', desc: 'Sinkronisasi otomatis dengan ShopeeFood, GrabFood, & WA.' },
+    { key: 'KDS', label: 'Kitchen Display System', desc: 'Tampilan pesanan khusus untuk dapur.' },
+    { key: 'BILLING', label: 'Koin & Billing', desc: 'Manajemen langganan dan pembelian koin sakti.', required: true },
+  ];
+
+  return (
+    <SectionCard title="App Market (Kelola Fitur)">
+      <p className="text-sm text-slate-500 mb-6 font-medium">Aktifkan atau nonaktifkan modul sesuai kebutuhan bisnis Anda. Tampilan menu akan menyesuaikan modul yang aktif untuk menjaga kebersihan UI.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {modules.map(mod => {
+          const isOn = features.includes(mod.key) || mod.required;
+          return (
+            <div key={mod.key} className={`p-5 border ${isOn ? 'border-primary/20 bg-white' : 'border-slate-100 bg-slate-50/50'} rounded-3xl flex flex-col justify-between hover:shadow-lg transition-all`}>
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className={`font-black uppercase tracking-tight ${isOn ? 'text-slate-900' : 'text-slate-500'}`}>{mod.label}</h4>
+                  <button 
+                    disabled={mod.required}
+                    onClick={() => toggleFeature(mod.key)} 
+                    className={`w-12 h-6 rounded-full transition-all flex items-center px-1 ${isOn ? 'bg-primary' : 'bg-slate-300'} ${mod.required ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${isOn ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">{mod.desc}</p>
+              </div>
+              {mod.required ? (
+                <span className="text-[10px] font-black uppercase text-amber-500 tracking-widest bg-amber-50 self-start px-3 py-1 rounded-full border border-amber-200">Modul Inti</span>
+              ) : isOn ? (
+                <span className="text-[10px] font-black uppercase text-primary tracking-widest bg-primary/10 self-start px-3 py-1 rounded-full">Aktif</span>
+              ) : (
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest bg-slate-200 self-start px-3 py-1 rounded-full">Nonaktif</span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </SectionCard>
+  );
+}
+
+function IntegrationSettings() {
+  return (
+    <div>
+      <SectionCard title="Integrasi Payment Gateway">
+        <div className="flex items-start gap-4 p-5 border-2 border-[#0E1E40] bg-[#0E1E40]/5 rounded-3xl mb-6">
+          <div className="w-16 h-16 bg-[#0E1E40] text-white rounded-2xl flex items-center justify-center flex-shrink-0 font-black tracking-widest text-xl">
+            xendit
+          </div>
+          <div className="flex-1">
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg">Xendit Payment</h4>
+                <p className="text-sm text-slate-500 font-medium">Terima pembayaran QRIS Dinamis, OVO, DANA, dan VA.</p>
+              </div>
+              <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-emerald-200">TERHUBUNG (LIVE)</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="bg-white p-3 rounded-xl border border-slate-200">
+                <p className="text-[10px] font-black text-slate-400 uppercase">MDR QRIS Dinamis</p>
+                <p className="font-bold text-slate-800 text-sm">0.7% per transaksi</p>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-slate-200">
+                <p className="text-[10px] font-black text-slate-400 uppercase">MDR E-Wallet</p>
+                <p className="font-bold text-slate-800 text-sm">1.5% per transaksi</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Toggle label="Bebankan Biaya MDR ke Pelanggan" desc="Total tagihan pelanggan akan ditambahkan persenan MDR otomatis" defaultVal={true} />
+        <Toggle label="Pencairan Dana Otomatis (H+1)" desc="Dana masuk ke rekening toko Anda setiap pagi hari kerja" defaultVal={true} />
+      </SectionCard>
+
+      <SectionCard title="Integrasi Lainnya">
+        <Toggle label="WhatsApp Gateway (Fonnte/Watzap)" desc="Untuk kirim OTP dan struk digital otomatis" defaultVal={true} />
+        <Toggle label="GrabFood / GoFood (Coming Soon)" desc="Tarik pesanan online langsung ke POS" defaultVal={false} />
+      </SectionCard>
+    </div>
+  );
+}
+
+// SuperAdminSettings dipindah ke /superadmin (SuperAdminPage.tsx)

@@ -23,13 +23,7 @@ const getTier = (points: number): Tier => {
   return 'BRONZE';
 };
 
-const MEMBERS: LoyaltyMember[] = [
-  { id: '1', name: 'Budi Santoso', phone: '08123456789', points: 18500, totalSpent: 1850000, visitCount: 37, tier: 'PLATINUM', joinDate: '2025-10-01', lastVisit: '2026-05-07' },
-  { id: '2', name: 'Maya Kusuma', phone: '08556677889', points: 12400, totalSpent: 1240000, visitCount: 28, tier: 'GOLD', joinDate: '2025-11-15', lastVisit: '2026-05-08' },
-  { id: '3', name: 'Siti Aminah', phone: '08567890123', points: 4200, totalSpent: 420000, visitCount: 9, tier: 'SILVER', joinDate: '2026-01-20', lastVisit: '2026-05-05' },
-  { id: '4', name: 'Andi Wijaya', phone: '08190123456', points: 250, totalSpent: 25000, visitCount: 1, tier: 'BRONZE', joinDate: '2026-05-05', lastVisit: '2026-05-05' },
-  { id: '5', name: 'Rina Kartika', phone: '08778899001', points: 7800, totalSpent: 780000, visitCount: 16, tier: 'GOLD', joinDate: '2025-12-10', lastVisit: '2026-04-16' },
-];
+const MEMBERS: LoyaltyMember[] = [];
 
 const REWARDS = [
   { id: '1', name: 'Diskon 10%',        points: 500,  icon: '🏷️', stock: 50 },
@@ -142,7 +136,7 @@ export default function LoyaltyPage() {
       <div className="flex gap-2 mb-6 flex-wrap">
         {(['MEMBERS', 'REWARDS', 'TIERS', 'SETTINGS'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-5 py-3 rounded-2xl font-black text-sm uppercase transition-all ${tab === t ? 'bg-slate-900 text-white' : 'bg-white text-slate-400 hover:bg-slate-100 shadow-sm'}`}>
+            className={`px-5 py-3 rounded-2xl font-black text-sm uppercase transition-all ${tab === t ? 'bg-blue-600 text-white' : 'bg-white text-slate-400 hover:bg-slate-100 shadow-sm'}`}>
             {t === 'MEMBERS' ? '👥 Anggota' : t === 'REWARDS' ? '🎁 Reward' : t === 'TIERS' ? '🏆 Tier' : '⚙️ Pengaturan'}
           </button>
         ))}
@@ -161,7 +155,7 @@ export default function LoyaltyPage() {
                 const tier = t !== 'SEMUA' ? TIERS[t] : null;
                 return (
                   <button key={t} onClick={() => setTierFilter(t)}
-                    className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${tierFilter === t ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500'}`}>
+                    className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${tierFilter === t ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500'}`}>
                     {t === 'SEMUA' ? 'Semua' : tier?.label}
                   </button>
                 );

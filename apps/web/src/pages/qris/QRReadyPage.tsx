@@ -8,12 +8,7 @@ interface TableOrder {
   total: number; fee: number; time: string; status: OrderStatus; customerNote?: string;
 }
 
-const MOCK_ORDERS: TableOrder[] = [
-  { id: 'O001', table: 3, items: [{ name: 'Nasi Goreng Spesial', qty: 2, price: 25000 }, { name: 'Es Teh Manis', qty: 2, price: 5000 }], total: 61000, fee: 1000, time: '22:15', status: 'BARU', customerNote: 'Tidak pedas' },
-  { id: 'O002', table: 7, items: [{ name: 'Ayam Penyet', qty: 1, price: 22000 }, { name: 'Kopi Susu Aren', qty: 1, price: 15000 }], total: 38000, fee: 1000, time: '22:08', status: 'DIPROSES' },
-  { id: 'O003', table: 1, items: [{ name: 'Mie Ayam Bakso', qty: 3, price: 18000 }], total: 55000, fee: 1000, time: '21:55', status: 'SIAP' },
-  { id: 'O004', table: 5, items: [{ name: 'Jus Alpukat', qty: 2, price: 12000 }], total: 25000, fee: 1000, time: '21:40', status: 'SELESAI' },
-];
+const MOCK_ORDERS: TableOrder[] = [];
 
 const TABLES = [1,2,3,4,5,6,7,8,9,10,11,12];
 const STATUS_COLORS: Record<OrderStatus, string> = {
@@ -33,18 +28,9 @@ export default function QRReadyPage() {
   const [notif, setNotif] = useState(true);
   const [activeFilter, setActiveFilter] = useState<'SEMUA' | OrderStatus>('SEMUA');
 
-  // Simulate new order notification
+  // Remove the simulated order notification effect for a clean demo
   useEffect(() => {
-    const t = setTimeout(() => {
-      const newOrder: TableOrder = {
-        id: `O${Date.now()}`, table: 9,
-        items: [{ name: 'Nasi Goreng Spesial', qty: 1, price: 25000, note: 'Extra sambal' }],
-        total: 26000, fee: 1000, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-        status: 'BARU',
-      };
-      setOrders(prev => [newOrder, ...prev]);
-    }, 8000);
-    return () => clearTimeout(t);
+    // Demo mode: No random new orders
   }, []);
 
   const updateStatus = (id: string, status: OrderStatus) =>
@@ -95,7 +81,7 @@ export default function QRReadyPage() {
       <div className="flex gap-2 mb-6">
         {(['PESANAN', 'MEJA', 'LAPORAN'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-6 py-3 rounded-2xl font-black text-sm uppercase transition-all ${tab === t ? 'bg-slate-900 text-white' : 'bg-white text-slate-400 hover:bg-slate-100'}`}>
+            className={`px-6 py-3 rounded-2xl font-black text-sm uppercase transition-all ${tab === t ? 'bg-blue-600 text-white' : 'bg-white text-slate-400 hover:bg-slate-100'}`}>
             {t}
           </button>
         ))}
@@ -221,17 +207,11 @@ export default function QRReadyPage() {
               <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-3xl text-center">
                 <h3 className="font-black text-2xl text-slate-900 mb-1 uppercase">QR Meja {showQR}</h3>
                 <p className="text-slate-500 text-sm mb-6">Scan untuk pesan & bayar langsung</p>
-                {/* QR Visual Placeholder */}
-                <div className="w-48 h-48 mx-auto bg-slate-900 rounded-2xl p-4 mb-4 relative">
-                  <div className="w-full h-full bg-white rounded-xl flex items-center justify-center">
-                    <div className="grid grid-cols-7 gap-0.5">
-                      {Array.from({ length: 49 }).map((_, i) => (
-                        <div key={i} className={`w-3 h-3 rounded-sm ${Math.random() > 0.5 ? 'bg-slate-900' : 'bg-white'}`} />
-                      ))}
-                    </div>
-                  </div>
+                {/* Real QR Code using api.qrserver.com */}
+                <div className="w-48 h-48 mx-auto bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-4 flex items-center justify-center relative">
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin + '/customer-order?meja=' + showQR)}`} alt={`QR Meja ${showQR}`} className="w-full h-full mix-blend-multiply" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
                       <QrCode className="w-6 h-6 text-white" />
                     </div>
                   </div>

@@ -4,14 +4,7 @@ import { ShoppingCart, Plus, Minus, Zap, Check, Clock, Package, ChevronRight, Qr
 type Step = 'MENU' | 'CART' | 'PAYMENT' | 'TRACKING';
 type OrderStatus = 'DITERIMA' | 'DIPROSES' | 'SIAP' | 'SELESAI';
 
-const MENU_ITEMS = [
-  { id: '1', name: 'Nasi Goreng Spesial', price: 25000, category: 'Makanan', desc: 'Nasi goreng dengan telur, ayam, dan bumbu rahasia', emoji: '🍳' },
-  { id: '2', name: 'Mie Ayam Bakso', price: 18000, category: 'Makanan', desc: 'Mie kuning dengan ayam cincang dan bakso sapi', emoji: '🍜' },
-  { id: '3', name: 'Ayam Penyet', price: 22000, category: 'Makanan', desc: 'Ayam goreng penyet sambal tomat segar', emoji: '🍗' },
-  { id: '4', name: 'Kopi Susu Aren', price: 15000, category: 'Minuman', desc: 'Kopi robusta dengan gula aren asli', emoji: '☕' },
-  { id: '5', name: 'Es Teh Manis', price: 5000, category: 'Minuman', desc: 'Teh segar dengan es batu', emoji: '🧋' },
-  { id: '6', name: 'Jus Alpukat', price: 12000, category: 'Minuman', desc: 'Jus alpukat segar blended dengan susu', emoji: '🥑' },
-];
+const MENU_ITEMS: { id: string; name: string; price: number; category: string; desc: string; emoji: string; }[] = [];
 
 interface CartItem { id: string; name: string; price: number; qty: number; note?: string; emoji: string; }
 
@@ -107,7 +100,7 @@ export default function CustomerOrderPage() {
           </div>
 
           <p className="text-center text-xs text-slate-400 font-bold mt-6 uppercase tracking-widest">
-            Kasir Sakti POS · zyntra.id
+        VISTRAL POS · vistral.id
           </p>
         </div>
       </div>
@@ -162,8 +155,8 @@ export default function CustomerOrderPage() {
           {payMethod === 'QRIS' && (
             <div className="bg-white rounded-2xl p-5 shadow-lg mb-5 text-center">
               <p className="text-xs font-black text-slate-500 uppercase mb-3">Scan QR Code ini</p>
-              <div className="w-36 h-36 mx-auto bg-slate-900 rounded-2xl flex items-center justify-center">
-                <QrCode className="w-20 h-20 text-white" />
+              <div className="w-36 h-36 mx-auto bg-white p-2 rounded-2xl border-2 border-slate-100 flex items-center justify-center">
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://qris.id/pay?amount=${total}`} alt="QRIS" className="w-full h-full object-contain" />
               </div>
               <p className="text-xs text-slate-400 mt-3 font-bold">QR berlaku 15 menit</p>
             </div>

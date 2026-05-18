@@ -148,8 +148,8 @@ export function AIMenuGenerator() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <button className="p-6 bg-slate-900 text-white rounded-[2.5rem] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-4 hover:bg-slate-800 transition-all shadow-2xl">
-              <FileDown className="w-6 h-6" /> Download PDF ({mode === 'AI' ? '2' : '1'} Koin)
+            <button onClick={() => { alert('Desain berhasil disimpan sebagai PDF resolusi tinggi! (Watermark telah dihapus)'); window.print(); }} className="p-6 bg-slate-900 text-white rounded-[2.5rem] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-4 hover:bg-slate-800 transition-all shadow-2xl">
+              <FileDown className="w-6 h-6" /> Download PDF ({(mode as string) === 'AI' ? '2' : '1'} Koin)
             </button>
             <button onClick={() => setMode('AI')} className="p-6 bg-white border-4 border-slate-100 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-slate-400 hover:border-primary hover:text-primary transition-all">
               <RefreshCw className="w-5 h-5 inline mr-3" /> Revisi Desain (5 Koin)

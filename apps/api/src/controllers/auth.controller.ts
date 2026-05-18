@@ -20,7 +20,7 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    
+
     // Create User & Outlet (Owner)
     const user = await prisma.user.create({
       data: {
@@ -41,11 +41,9 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    console.log(`[OTP] Sent to ${phone}: ${otp}`);
-
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Registrasi berhasil. Silakan verifikasi OTP.',
-      phone 
+      phone
     });
   } catch (error: any) {
     res.status(400).json({ message: error.message });

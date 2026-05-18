@@ -51,7 +51,7 @@ export default function AboutPage() {
             "Setiap warung Indonesia berhak mendapat teknologi kelas enterprise — tanpa harga enterprise."
           </h2>
           <p className="text-slate-400 font-medium text-lg max-w-2xl mx-auto">
-            Kami percaya digitalisasi UMKM adalah kunci pertumbuhan ekonomi Indonesia. Kasir Sakti POS adalah langkah pertama kami.
+            Kami percaya digitalisasi UMKM adalah kunci pertumbuhan ekonomi Indonesia. VISTRAL POS adalah langkah pertama kami.
           </p>
         </div>
       </section>
@@ -80,7 +80,7 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-black text-slate-900 mb-3">Tim Kami</h2>
-            <p className="text-slate-500 font-medium">Orang-orang di balik Kasir Sakti POS.</p>
+            <p className="text-slate-500 font-medium">Orang-orang di balik VISTRAL POS.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TEAM.map(m => (
@@ -118,7 +118,7 @@ export default function AboutPage() {
       <section className="py-20 px-6 bg-primary text-white">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-xs font-black uppercase tracking-widest text-white/60 mb-4">Produk Kami</p>
-          <h2 className="text-4xl font-black mb-4">Kasir Sakti POS</h2>
+          <h2 className="text-4xl font-black mb-4">VISTRAL POS</h2>
           <p className="text-white/80 font-medium text-lg max-w-2xl mx-auto mb-10">
             Platform kasir modern untuk UMKM Indonesia. Gratis untuk kasir, bayar hanya fitur yang dibutuhkan.
           </p>

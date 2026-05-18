@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     
     <!-- Primary Meta -->
-    <title>Kasir Sakti POS — Kasir Pintar untuk UMKM Indonesia</title>
+    <title>VISTRAL POS — Pay As You Go · Platform Kasir Bisnis Modern Indonesia</title>
     <meta name="description" content="Aplikasi kasir & POS pintar untuk UMKM Indonesia. Kelola penjualan, stok, laporan, dan lebih banyak lagi. Gratis, mudah, dan bisa dipakai offline." />
     <meta name="keywords" content="kasir, POS, aplikasi kasir, UMKM, point of sale, kasir digital, kasir gratis" />
-    <meta name="author" content="Kasir Sakti" />
+    <meta name="author" content="VISTRAL POS by Zyntra Labs" />
     <meta name="robots" content="index, follow" />
 
     <!-- PWA Meta Tags -->
-    <meta name="application-name" content="Kasir Sakti" />
+    <meta name="application-name" content="VISTRAL POS" />
     <meta name="theme-color" content="#3b82f6" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Kasir Sakti" />
+    <meta name="apple-mobile-web-app-title" content="VISTRAL POS" />
     <meta name="msapplication-TileColor" content="#1e3a8a" />
     <meta name="msapplication-tap-highlight" content="no" />
 
@@ -25,27 +25,21 @@
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Favicon & Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96x96.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png" />
-    <link rel="apple-touch-icon" href="/icons/icon-152x152.png" />
-    <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.png" />
-    <link rel="apple-touch-icon" sizes="114x114" href="/icons/icon-128x128.png" />
-    <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon.svg" />
 
     <!-- Open Graph (untuk preview saat di-share di WhatsApp, dll) -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Kasir Sakti POS — Kasir Pintar untuk UMKM" />
-    <meta property="og:description" content="Kelola bisnis UMKM kamu dengan lebih mudah. Kasir digital, laporan otomatis, stok real-time." />
-    <meta property="og:image" content="/icons/icon-512x512.png" />
+    <meta property="og:title" content="VISTRAL POS — Pay As You Go · Platform Kasir Modern" />
+    <meta property="og:description" content="VISTRAL POS — Platform kasir Pay As You Go terlengkap. Gratis untuk kasir dasar, bayar hanya fitur yang Anda gunakan." />
+    <meta property="og:image" content="/icons/icon.svg" />
     <meta property="og:locale" content="id_ID" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Kasir Sakti POS" />
-    <meta name="twitter:description" content="Aplikasi kasir pintar untuk UMKM Indonesia" />
-    <meta name="twitter:image" content="/icons/icon-512x512.png" />
+    <meta name="twitter:title" content="VISTRAL POS — Pay As You Go" />
+    <meta name="twitter:description" content="Platform kasir Pay As You Go modern untuk bisnis Indonesia" />
+    <meta name="twitter:image" content="/icons/icon.svg" />
 
     <!-- Preconnect Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -65,7 +59,7 @@
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
             .then(reg => {
-              console.log('[Kasir Sakti] Service Worker registered:', reg.scope);
+              console.log('[VISTRAL POS] Service Worker registered:', reg.scope);
               reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;
                 newWorker.addEventListener('statechange', () => {
@@ -76,7 +70,7 @@
                 });
               });
             })
-            .catch(err => console.warn('[Kasir Sakti] SW registration failed:', err));
+            .catch(err => console.warn('[VISTRAL POS] SW registration failed:', err));
         });
       }
     </script>

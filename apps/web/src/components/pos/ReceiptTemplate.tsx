@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 interface ReceiptProps {
   outletName: string;
@@ -9,6 +9,7 @@ interface ReceiptProps {
 }
 
 export function ReceiptTemplate({ outletName, items, subtotal, platformFee, total }: ReceiptProps) {
+  const receiptNo = useMemo(() => Math.floor(Math.random() * 90000) + 10000, []);
   return (
     <div className="bg-white p-6 w-[300px] font-mono text-[10px] text-slate-800 shadow-lg mx-auto">
       <div className="text-center border-b border-dashed border-slate-300 pb-4 mb-4">
@@ -23,7 +24,7 @@ export function ReceiptTemplate({ outletName, items, subtotal, platformFee, tota
           <span>Jam: {new Date().toLocaleTimeString('id-ID')}</span>
         </div>
         <p>Kasir: Administrator</p>
-        <p>No: #KSP-{Math.floor(Math.random() * 10000)}</p>
+        <p>No: #KSP-{receiptNo}</p>
       </div>
 
       <div className="border-b border-dashed border-slate-300 pb-2 mb-2">
@@ -57,7 +58,7 @@ export function ReceiptTemplate({ outletName, items, subtotal, platformFee, tota
         <p className="font-bold">TERIMA KASIH</p>
         <p>Sudah mampir di {outletName}</p>
         <div className="mt-6 pt-4 text-[8px] text-slate-400 font-medium uppercase tracking-widest border-t border-slate-50">
-          Dibuat dengan Kasir Sakti POS | zyntra.id
+          Dibuat dengan VISTRAL POS | vistral.id
         </div>
       </div>
     </div>
