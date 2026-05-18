@@ -9,8 +9,6 @@ import {
 import { Logo } from '../ui/Logo';
 import { useAuthStore } from '../../stores/auth.store';
 import { OrderNotification } from '../ui/OrderNotification';
-import { AIFloatingChat } from '../ai/AIFloatingChat';
-
 interface SidebarItemProps {
   icon: React.ReactNode;
   label: string;
@@ -234,7 +232,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-white flex relative">
       <OrderNotification />
-      <AIFloatingChat />
       {/* Desktop Sidebar */}
       <div className="hidden lg:block flex-shrink-0">
         {sidebar}
