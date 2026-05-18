@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Lock, Zap, Clock, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
 import { getActivePricing, getFeatureSub, saveFeatureSub } from '../../constants/pricing.constants';
+import { supabase } from '../../lib/supabase';
 
 interface FeatureGuardProps {
   featureId: string;
@@ -37,12 +38,43 @@ export function FeatureGuard({ featureId, featureName, children }: FeatureGuardP
     return () => clearInterval(id);
   }, [featureId]);
 
-  const handlePurchase = useCallback((type: 'daily' | 'weekly' | 'monthly' | 'yearly', cost: number, days: number) => {
+  const handlePurchase = useCallback(async (type: 'daily' | 'weekly' | 'monthly' | 'yearly', cost: number, days: number) => {
     const label = type === 'daily' ? 'Harian' : type === 'weekly' ? 'Mingguan' : type === 'monthly' ? 'Bulanan' : 'Tahunan';
+    
+    if (!user) {
+      alert('Silakan login terlebih dahulu.');
+      return;
+    }
+    if ((user.coins || 0) < cost) {
+      alert(`Saldo Koin tidak cukup! Anda butuh ${cost} koin, tapi saldo Anda sisa ${user.coins || 0} koin.`);
+      return;
+    }
+
     if (!window.confirm(`Aktifkan ${featureName} paket ${label} seharga ${cost} Koin?`)) return;
-    const sub = saveFeatureSub(featureId, type, days);
-    setSubscription(sub);
-  }, [featureId, featureName]);
+    
+    try {
+      const newCoins = (user.coins || 0) - cost;
+      
+      // Update Supabase (bypass if demo user)
+      if (!user.id.startsWith('demo-')) {
+        const { error } = await supabase.from('profiles').update({ coins: newCoins }).eq('id', user.id);
+        if (error) throw error;
+      }
+
+      // Update Auth Store
+      useAuthStore.setState(state => ({
+        user: state.user ? { ...state.user, coins: newCoins } : null
+      }));
+
+      // Activate feature locally
+      const sub = saveFeatureSub(featureId, type, days);
+      setSubscription(sub);
+      
+      alert(`✅ Fitur aktif! Koin Anda berhasil dipotong. Sisa koin: ${newCoins}`);
+    } catch (err: any) {
+      alert(`❌ Gagal mengaktifkan fitur: ${err.message}`);
+    }
+  }, [featureId, featureName, user]);
 
   const featurePrice = pricing.find(p => p.id === featureId) ?? pricing[0];
 
