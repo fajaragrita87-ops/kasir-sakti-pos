@@ -115,7 +115,7 @@ export function FeatureGuard({ featureId, featureName, children }: FeatureGuardP
                       onClick={() => handlePurchase('daily', featurePrice.daily, 1)}
                       className="w-full py-3 rounded-2xl font-black text-sm bg-amber-500 text-white hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/20 uppercase tracking-wide"
                     >
-                      Beli Harian
+                      Beli Harian (v2)
                     </button>
                   </div>
                 </div>
@@ -132,7 +132,7 @@ export function FeatureGuard({ featureId, featureName, children }: FeatureGuardP
                       onClick={() => handlePurchase('weekly', featurePrice.weekly, 7)}
                       className="w-full py-3 rounded-2xl font-black text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 uppercase tracking-wide"
                     >
-                      Beli Mingguan
+                      Beli Mingguan (v2)
                     </button>
                   </div>
                 </div>
@@ -152,7 +152,7 @@ export function FeatureGuard({ featureId, featureName, children }: FeatureGuardP
                   onClick={() => handlePurchase('monthly', featurePrice.monthly, 30)}
                   className="w-full py-3 rounded-2xl font-black text-sm bg-indigo-500 text-white hover:bg-indigo-600 transition-colors shadow-lg shadow-indigo-500/20 uppercase tracking-wide"
                 >
-                  Beli Bulanan
+                  Beli Bulanan (v2)
                 </button>
               </div>
             </div>
@@ -171,7 +171,7 @@ export function FeatureGuard({ featureId, featureName, children }: FeatureGuardP
                   onClick={() => handlePurchase('yearly', featurePrice.yearly, 365)}
                   className="w-full py-3 rounded-2xl font-black text-sm bg-rose-500 text-white hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/20 uppercase tracking-wide"
                 >
-                  Beli Tahunan
+                  Beli Tahunan (v2)
                 </button>
               </div>
             </div>

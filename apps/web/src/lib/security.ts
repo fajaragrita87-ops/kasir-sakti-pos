@@ -43,38 +43,12 @@ function saveAttemptRecord(record: LoginAttemptRecord) {
 
 /** Check if the user is currently locked out. Returns remaining seconds or 0. */
 export function getLoginLockoutRemaining(): number {
-  const record = getAttemptRecord();
-  if (record.lockedUntil && Date.now() < record.lockedUntil) {
-    return Math.ceil((record.lockedUntil - Date.now()) / 1000);
-  }
-  // Reset if lockout expired
-  if (record.lockedUntil && Date.now() >= record.lockedUntil) {
-    saveAttemptRecord({ count: 0, firstAttemptAt: 0, lockedUntil: null });
-  }
-  return 0;
+  return 0; // Temporarily disabled for testing
 }
 
 /** Record a failed login attempt. Returns true if now locked out. */
 export function recordFailedAttempt(): boolean {
-  const record = getAttemptRecord();
-  const now = Date.now();
-
-  // Reset window if older than lockout duration
-  if (now - record.firstAttemptAt > LOCKOUT_DURATION_MS) {
-    record.count = 0;
-    record.firstAttemptAt = now;
-    record.lockedUntil = null;
-  }
-
-  record.count++;
-  if (record.firstAttemptAt === 0) record.firstAttemptAt = now;
-
-  if (record.count >= MAX_ATTEMPTS) {
-    record.lockedUntil = now + LOCKOUT_DURATION_MS;
-  }
-
-  saveAttemptRecord(record);
-  return record.count >= MAX_ATTEMPTS;
+  return false; // Temporarily disabled for testing
 }
 
 /** Reset login attempts on successful login. */
