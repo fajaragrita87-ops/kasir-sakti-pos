@@ -1,8 +1,8 @@
 // VISTRAL POS — Service Worker
 // Handles offline caching & background sync
 
-const CACHE_NAME = 'vistral-pos-v4';
-const STATIC_CACHE = 'vistral-pos-static-v4';
+const CACHE_NAME = 'vistral-pos-v5';
+const STATIC_CACHE = 'vistral-pos-static-v5';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
