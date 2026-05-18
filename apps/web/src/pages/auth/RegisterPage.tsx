@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, ArrowRight, User, Phone, Lock, ShieldCheck, Mail, Store, CheckCircle2 } from 'lucide-react';
+import { ShoppingCart, ArrowRight, User, Phone, Lock, ShieldCheck, Mail, Store, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { addRegistration } from '../../services/registrationNotifications';
 import { supabase } from '../../lib/supabase';
@@ -27,7 +27,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (parseInt(captchaInput) !== captchaNum1 + captchaNum2) {
-      alert('Verifikasi Keamanan (Captcha) Salah! Silakan coba lagi.');
+      setRegisterError('Verifikasi Keamanan (Captcha) Salah! Silakan coba lagi.');
       setCaptchaNum1(Math.floor(Math.random() * 10) + 1);
       setCaptchaNum2(Math.floor(Math.random() * 10) + 1);
       setCaptchaInput('');
@@ -246,6 +246,12 @@ export default function RegisterPage() {
                 Setelah mendaftar, Super Admin platform akan mendapatkan notifikasi dan Anda akan menerima konfirmasi via WA & email.
               </p>
             </div>
+
+            {registerError && (
+              <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-rose-700 text-sm font-bold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" /> {registerError}
+              </div>
+            )}
 
             <button
               type="submit"
