@@ -1,8 +1,8 @@
 // VISTRAL POS — Service Worker
 // Handles offline caching & background sync
 
-const CACHE_NAME = 'vistral-pos-v5';
-const STATIC_CACHE = 'vistral-pos-static-v5';
+const CACHE_NAME = 'vistral-pos-v6';
+const STATIC_CACHE = 'vistral-pos-static-v6';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -54,6 +54,9 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
+          if (!response.ok) {
+            return caches.match('/index.html');
+          }
           const cloned = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
           return response;
