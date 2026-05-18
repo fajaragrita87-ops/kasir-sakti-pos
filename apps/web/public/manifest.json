@@ -2,7 +2,7 @@
   "name": "VISTRAL POS",
   "short_name": "VISTRAL POS",
   "description": "VISTRAL POS — Platform kasir Pay As You Go terlengkap untuk UMKM Indonesia. Gratis untuk kasir dasar, bayar hanya fitur yang Anda gunakan.",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

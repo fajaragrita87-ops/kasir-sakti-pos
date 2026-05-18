@@ -290,6 +290,14 @@ export default function LandingPage() {
   const [activeFeature, setActiveFeature] = useState(0);
 
   React.useEffect(() => {
+    // If user is already logged in, skip the landing page and go straight to dashboard
+    const { isSessionValid, user } = useAuthStore.getState();
+    if (isSessionValid() && user) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+
+  React.useEffect(() => {
     const timer = setInterval(() => {
       setActiveFeature(prev => (prev + 1) % FEATURE_SHOWCASE.length);
     }, 3500);
